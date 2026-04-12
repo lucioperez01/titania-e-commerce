@@ -66,6 +66,7 @@ model Product {
   cartItems   CartItem[]
   discounts   Discount[]
   variants    ProductVariant[]
+  isOnline    Boolean   @default(true)
 
   @@index([categoryId])
   @@index([slug])
