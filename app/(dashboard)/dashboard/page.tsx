@@ -6,13 +6,11 @@ import {
     CreditCard,
     DollarSign,
     Package,
-    PackagePlus,
     Settings,
     ShoppingCart,
     TrendingUp,
     Users,
-    BoxSelect,
-    Edit
+    BoxSelect
 } from "lucide-react";
 
 export default function DashboardPage() {

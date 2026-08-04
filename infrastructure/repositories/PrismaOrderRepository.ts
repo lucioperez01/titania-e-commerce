@@ -9,7 +9,7 @@ import { User } from "@/domain/user/entities/user";
 
 export class PrismaOrderRepository implements OrderRepository {
 
-    private mapToOrder(data: any) {
+    private mapToOrder(data: any) { // eslint-disable-line @typescript-eslint/no-explicit-any -- transitional mapper called with both single Prisma orders and arrays; tightening needs call-site refactor
         return data.map((order: { id: number; userId: number | null; email: string; fullName: string; phone: string; subtotal: number; total: number; status: DomainOrderStatus; shippingProvider: string | null; shippingId: string | null; shippingCost: number | null; paymentProvider: DomainPaymentProvider; paymentId: string | null; paidAt: Date | null; shippingAddressId: number; createdAt: Date; updatedAt: Date; }) => new Order(
             order.id,
             order.userId,

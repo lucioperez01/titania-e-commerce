@@ -1,10 +1,8 @@
-import Image from "next/image";
 import Link from "next/link"
 import { Button } from "../ui/button";
 
 export default function Header() {
-        let ctaText: string = "Ver colección"
-        let shopHref: string = "/shop"
+        const shopHref: string = "/shop"
 
         return(
             <div className="flex flex-col w-full text-slate-200 justify-center items-center">

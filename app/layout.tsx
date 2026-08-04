@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Merriweather_Sans, Inter } from "next/font/google";
+import { CartProvider } from "@/components/cart/cart-provider";
 import "./globals.css";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 
 const primary = Manrope({
   variable: "--font-primary",
@@ -37,7 +36,9 @@ export default function RootLayout({
     <html lang="es">
       <body
         className={`${primary.variable} bg-linear-to-tr from-purple-500/90 to-purple-900/90 antialiased min-h-screen flex flex-col items-center justify-between ${secondary.variable} ${tertiary.variable} overflow-x-hidden`}>
-            {children}
+          <CartProvider>
+              {children}
+          </CartProvider>
       </body>
     </html>
   );

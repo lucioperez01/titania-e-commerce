@@ -1,7 +1,7 @@
-import { ProductRepositoryMock } from "@/infrastructure/repositories/product-repository-mock"
 import { Rating } from "@/components/product/rating"
 import Price from "@/components/product/price"
 import Link from "next/link"
+import AddToCartButton from "@/components/cart/add-to-cart-button"
 import { Button } from "@/components/ui/button"
 import { LucideCheck } from "lucide-react"
 import { LucideTruck } from "lucide-react"
@@ -24,9 +24,9 @@ export default async function ProductPage({
         return <div>Producto no encontrado</div>
     }
 
-    let sold: number = product.sold ? product.sold : 0
-    let rating: number = product.rating ? product.rating : 0
-    let oldPrice: number = product.oldPrice ? product.oldPrice : 0
+    const sold: number = product.sold ? product.sold : 0
+    const rating: number = product.rating ? product.rating : 0
+    const oldPrice: number = product.oldPrice ? product.oldPrice : 0
 
     return (
         <main className="max-w-6xl mx-auto flex flex-col items-center gap-3 ">
@@ -64,9 +64,7 @@ export default async function ProductPage({
                                 <Button variant="outline" className="w-full cursor-pointer text-black text-md font-light font-primary py-5">Comprar ahora</Button>
                             </Link>
 
-                            <Link href="#">
-                                <Button variant="outline" className="w-full bg-transparent cursor-pointer text-white text-md font-light font-primary py-5">Agregar al carrito 🛒</Button>
-                            </Link>
+                            <AddToCartButton productId={product.id} stock={product.stock} />
                         </div>
 
                         <div className="flex flex-col gap-2 mt-5">

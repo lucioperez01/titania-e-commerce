@@ -3,6 +3,7 @@ import { CartItem } from "@/domain/cart/entities/cartItem";
 import { CartRepository } from "@/domain/cart/repositories/cart-repository";
 import { prisma } from "../db/prismaClient";
 import { CartStatus } from "@/domain/cart/entities/cartStatus";
+import { Prisma, CartStatus as PrismaCartStatus, CartItem as PrismaCartItem } from "@prisma/client";
 
 export class PrismaCartRepository implements CartRepository {
     async findAll(): Promise<Cart[]> {
@@ -30,7 +31,7 @@ export class PrismaCartRepository implements CartRepository {
 
     async findAbandoned(): Promise<Cart[]> {
         const carts = await prisma.cart.findMany({
-            where: { status: 'ABANDONED' as any },
+            where: { status: PrismaCartStatus.ABANDONED },
             include: { items: true }
         });
         return carts.map(c => this.mapToDomain(c));
@@ -73,8 +74,8 @@ export class PrismaCartRepository implements CartRepository {
         });
     }
 
-    private mapToDomain(data: any): Cart {
-        const items = (data.items || []).map((item: any) => new CartItem(
+    private mapToDomain(data: Prisma.CartGetPayload<{ include: { items: true } }>): Cart {
+        const items = (data.items || []).map((item: PrismaCartItem) => new CartItem(
             item.id,
             item.cartId,
             item.productId,
@@ -102,7 +103,7 @@ export class PrismaCartRepository implements CartRepository {
         }
     }
 
-    private mapStatusToPrisma(status: CartStatus): any {
+    private mapStatusToPrisma(status: CartStatus): PrismaCartStatus {
         switch (status) {
             case CartStatus.ACTIVE: return 'ACTIVE';
             case CartStatus.ABANDONED: return 'ABANDONED';

@@ -6,7 +6,7 @@ export class Variant {
         public stock: number,
         public reservedStock: number = 0,
         public sku: string,
-        public attributes: Record<string, any>,
+        public attributes: Record<string, unknown>,
         public createdAt: Date,
         public updatedAt: Date,
         public weight?: number,

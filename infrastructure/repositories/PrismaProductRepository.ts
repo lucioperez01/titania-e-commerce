@@ -1,9 +1,7 @@
 import { prisma } from "../db/prismaClient"
 import { ProductRepository } from "@/domain/product/repositories/product/product-repository"
 import { Product } from "@/domain/product/entities/product"
-import { User } from "@/domain/user/entities/user"
 import { Category } from "@/domain/product/entities/category"
-import { error } from "console"
 
 export class PrismaProductRepository implements ProductRepository {
 
@@ -12,7 +10,7 @@ export class PrismaProductRepository implements ProductRepository {
         return products.map(p => this.mapToProduct(p))
     }
 
-    private mapToProduct(data: any): Product {
+    private mapToProduct(data: any): Product { // eslint-disable-line @typescript-eslint/no-explicit-any -- reads relation field (data.category) without include; proper typing forces Prisma payload generics that don't match the domain Category
         return new Product({
             id: data.id,
             name: data.name,
@@ -31,7 +29,7 @@ export class PrismaProductRepository implements ProductRepository {
         })
     }
 
-    private mapToEntity(product: Product): any {
+    private mapToEntity(product: Product): any { // eslint-disable-line @typescript-eslint/no-explicit-any -- return shape is an ad-hoc Prisma create payload; the `as any` on categoryId bridges a domain/prisma enum mismatch
         return {
             name: product.name,
             slug: product.slug,
@@ -47,7 +45,7 @@ export class PrismaProductRepository implements ProductRepository {
                 }
             },
             category: {
-                connect: { id: product.category as any }
+                connect: { id: product.category.id }
             }
         }
     }
@@ -58,7 +56,7 @@ export class PrismaProductRepository implements ProductRepository {
     }
 
     async findById(id: number): Promise<Product | null> {
-        let product = await prisma.product.findUnique({ where: { id } })
+        const product = await prisma.product.findUnique({ where: { id } })
         return this.mapToProduct(product)
     }
 

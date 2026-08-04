@@ -1,4 +1,3 @@
-import { Product } from '@/domain/product/entities/product'
 import { Category } from '../../entities/category'
 
 export interface CategoryRepository {

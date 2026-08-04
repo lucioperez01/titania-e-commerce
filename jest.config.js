@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS Jest config legitimately uses require() */
 const { createDefaultPreset } = require("ts-jest");
 const { loadEnvConfig } = require("@next/env");
 

@@ -6,7 +6,7 @@ import { Address } from "@/domain/user/entities/address";
 
 export class PrismaUserRepository implements UserRepository {
 
-    private mapToUser(user: any): User {
+    private mapToUser(user: any): User { // eslint-disable-line @typescript-eslint/no-explicit-any -- accesses fields not present on the generated Prisma User type (cart/country/zipCode); proper typing requires schema/domain alignment
         return new User(
             user.id,
             user.email,
@@ -58,7 +58,7 @@ export class PrismaUserRepository implements UserRepository {
     }
 
     async findByCity(address: Address): Promise<User[]> {
-        let product = await prisma.user.findMany({ where: { address: address.city } })
+        const product = await prisma.user.findMany({ where: { address: address.city } })
         return product.map(u => this.mapToUser(u))
     }
 }

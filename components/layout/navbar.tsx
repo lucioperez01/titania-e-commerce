@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CartIcon from "@/components/cart/cart-icon";
 
 export default function Navbar() {
     return (
@@ -8,12 +9,15 @@ export default function Navbar() {
                 <Link href="/"><h1 className="font-primary font-medium">Titania</h1></Link>
 
                 <nav>
-                    <ul className="flex gap-5 font-primary ">
+                    <ul className="flex items-center gap-5 font-primary ">
                         <li>
                             <Link href="/shop" className="">Shop</Link>
                         </li>
                         <li>
                             <Link href="#" className="">Contact</Link>
+                        </li>
+                        <li>
+                            <CartIcon />
                         </li>
                     </ul>
                 </nav>

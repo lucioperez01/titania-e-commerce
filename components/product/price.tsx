@@ -1,7 +1,3 @@
-import Link from "next/link"
-import { Button } from "../ui/button"
-import { text } from "stream/consumers";
-
 type PriceProps = {
     value: number;
     oldValue?: number;
@@ -18,7 +14,7 @@ export default function Price({ value, oldValue, sm }: PriceProps) {
     }
 
     if (oldValue) {
-        let discount = ((oldValue - value) * 100) / oldValue
+        const discount = ((oldValue - value) * 100) / oldValue
         return (
             <div className="flex flex-col gap-1 ">
 

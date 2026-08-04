@@ -7,6 +7,7 @@ export class PrismaCategoriesRepository implements CategoryRepository {
         const categories = await prisma.category.findMany();
         return categories;
     }
+
     async findById(id: number): Promise<CategoryDTO | null> {
         const category = await prisma.category.findUnique({ where: { id } });
         return category;
@@ -15,6 +16,12 @@ export class PrismaCategoriesRepository implements CategoryRepository {
         const category = await prisma.category.findUnique({ where: { slug } });
         return category;
     }
+
+    async findAllActive(): Promise<CategoryDTO[] | null> {
+        const categories = await prisma.category.findMany({ where: { isDeleted: false } })
+        return categories;
+    }
+
     async addCategory(category: CategoryDTO): Promise<void> {
         await prisma.category.create({ data: category });
     }
@@ -22,6 +29,10 @@ export class PrismaCategoriesRepository implements CategoryRepository {
         await prisma.category.update({ where: { id: category.id }, data: category });
     }
     async deleteCategory(id: number): Promise<void> {
-        await prisma.category.delete({ where: { id } });
+        await prisma.category.update(
+            { where: { id },
+            data: { isDeleted: true}
+        
+        });
     }
 }

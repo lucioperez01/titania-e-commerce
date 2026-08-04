@@ -1,5 +1,6 @@
 import { ProductRepository } from "@/domain/product/repositories/product/product-repository";
 import { Product } from "@/domain/product/entities/product";
+import { Category } from "@/domain/product/entities/category";
 
 export class ProductService {
     constructor(
@@ -18,7 +19,7 @@ export class ProductService {
         return this.repo.findById(id)
     }
 
-    async getProductsByCategory(category: string) {
+    async getProductsByCategory(category: Category) {
         return this.repo.findByCategory(category)
     }
 
