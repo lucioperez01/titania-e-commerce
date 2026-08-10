@@ -13,7 +13,18 @@ export class Category {
     constructor(props: CategoryProps) {
         this.id = props.id
         this.name = props.name
-        this.slug = props.name.toLowerCase().replace(/\s/g, "-")
+        this.slug = Category.toSlug(props.name)
         this.image = props.image
+    }
+
+    static toSlug(name: string): string {
+        return name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
     }
 }

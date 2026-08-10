@@ -110,8 +110,10 @@ export class PrismaOrderRepository implements OrderRepository {
         
         async updateOrder(order: Order): Promise<void> {
             if(order != null){
-                const orderUpdated = await this.mapToOrder(order)
-                await prisma.order.update(orderUpdated)
+                await prisma.order.update({
+                    where: { id: order.id },
+                    data: await this.mapToEntity(order)
+                })
             }
         }
     }

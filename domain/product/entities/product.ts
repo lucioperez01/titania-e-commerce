@@ -15,6 +15,7 @@ type ProductProps = {
     rating?: number,
     sold?: number,
     oldPrice?: number,
+    isOnline?: boolean,
     comments?: Comment[],
     sizes?: string[],
     colors?: string[],
@@ -39,6 +40,7 @@ export class Product {
     public rating?: number
     public sold?: number
     public oldPrice?: number
+    public isOnline?: boolean
     public comments?: Comment[]
     public sizes?: string[]
     public colors?: string[]
@@ -63,6 +65,7 @@ export class Product {
         this.rating = props.rating
         this.sold = props.sold
         this.oldPrice = props.oldPrice
+        this.isOnline = props.isOnline
         this.comments = props.comments
         this.sizes = props.sizes
         this.colors = props.colors
@@ -93,11 +96,11 @@ export class Product {
             throw new Error("El producto debe tener una categoría.")
         }
 
-        if (props.desc.trim().length < 3) {
+        if (props.desc && props.desc.trim().length < 3) {
             throw new Error("La descripción debe tener al menos 3 caracteres.")
         }
 
-        if (props.brand.trim().length < 3) {
+        if (props.brand && props.brand.trim().length < 3) {
             throw new Error("La marca debe tener al menos 3 caracteres.")
         }
 

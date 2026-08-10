@@ -3,7 +3,7 @@ import { getProducts } from "@/application/use-cases/get-products"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 
 export default async function Shop() {
-    const products: ProductDTO[] = await getProducts()
+    const products: ProductDTO[] = await getProducts({ onlyOnline: true })
 
     if (products.length === 0) {
         return <div className="text-2xl text-white text-center">No hay productos</div>

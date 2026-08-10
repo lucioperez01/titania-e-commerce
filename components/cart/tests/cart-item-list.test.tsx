@@ -18,6 +18,7 @@ const mockProducts: ProductDTO[] = [
         category: { id: 1, name: "Cat", slug: "cat" },
         brand: "Brand",
         stock: 10,
+        isOnline: true,
     },
     {
         id: 8,
@@ -28,6 +29,7 @@ const mockProducts: ProductDTO[] = [
         category: { id: 1, name: "Cat", slug: "cat" },
         brand: "Brand",
         stock: 5,
+        isOnline: true,
     },
 ]
 

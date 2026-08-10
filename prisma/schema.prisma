@@ -57,6 +57,7 @@ model Product {
   costPrice     Decimal?  @db.Decimal(10,2)
   stock         Int
   weight        Int?      // gramos
+  brand         String?
   reservedStock Int       @default(0)
   rating        Float     @default(0)
   sold          Int?      @default(0)

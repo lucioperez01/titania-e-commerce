@@ -16,6 +16,7 @@ export type ProductDTO = {
     category: CategoryDTO
     brand: string
     stock: number
+    isOnline: boolean
 }
 
 export type ProductImageDTO = {
@@ -36,6 +37,7 @@ export type CategoryDTO = {
     id: number
     name: string
     slug: string
+    image?: string
 }
 
 export function categoryToDTO(category: Category): CategoryDTO {
@@ -43,6 +45,7 @@ export function categoryToDTO(category: Category): CategoryDTO {
         id: category.id,
         name: category.name,
         slug: category.slug,
+        image: category.image,
     }
 }
 
@@ -66,6 +69,7 @@ export function productToDTO(product: Product): ProductDTO {
         desc: product.desc,
         category: categoryToDTO(product.category),
         brand: product.brand,
-        stock: product.stock
+        stock: product.stock,
+        isOnline: product.isOnline ?? true,
     }
 }

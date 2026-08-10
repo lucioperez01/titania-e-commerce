@@ -1,14 +1,9 @@
 
 
 import HeroCarouselClient from "./heroCarouselClient"
-import { getProducts } from "@/application/use-cases/get-products"
+import { ProductDTO } from "@/Interfaces/dto/product.dto"
 
-export default async function HeroCarousel() {
-  const products = await getProducts()
-
-  console.log("products: ", products)
-
+export default function HeroCarousel({ products }: { products: ProductDTO[] }) {
   return <HeroCarouselClient products={products} />
-
 }
 

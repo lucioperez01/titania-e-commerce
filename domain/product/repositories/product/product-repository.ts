@@ -1,8 +1,12 @@
 import { Product } from '@/domain/product/entities/product'
 import { Category } from '../../entities/category'
 
+export type FindAllOptions = {
+    isOnline?: boolean
+}
+
 export interface ProductRepository {
-    findAll(): Promise<Product[]>
+    findAll(options?: FindAllOptions): Promise<Product[]>
     findById(id: number): Promise<Product | null>
     findBySlug(slug: string): Promise<Product | null>
     addProduct(product: Product): Promise<void>

@@ -4,8 +4,11 @@ import Navbar from "@/components/layout/navbar"
 import Header from "@/components/layout/header";
 import HeroCarousel from "./(store)/shop/components/hero-carousel/heroCarousel";
 import { Button } from "@/components/ui/button";
+import { getProducts } from "@/application/use-cases/get-products";
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts({ onlyOnline: true })
+
   return (
     <div className="flex flex-col min-h-screen items-center ">
       
@@ -16,7 +19,7 @@ export default function Home() {
             <Header />
 
             <div className="w-90 xl:w-200">
-              <HeroCarousel/>
+              <HeroCarousel products={products} />
               <Link href="/shop" className="flex flex-col items-center py-5">
                 <Button 
                   variant="ghost"
