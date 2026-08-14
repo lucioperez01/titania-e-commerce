@@ -1,27 +1,98 @@
-import Link from "next/link";
-import CartIcon from "@/components/cart/cart-icon";
+import Link from "next/link"
+import CartIcon from "@/components/cart/cart-icon"
+import { auth, signOut } from "@/lib/auth"
+import { getNavbarCategories } from "@/application/use-cases/get-navbar-categories"
+import { User, LayoutDashboard } from "lucide-react"
+import MobileMenu from "./mobile-menu"
 
-export default function Navbar() {
-    return (
-        <div className="sticky top-0 w-full h-10 flex items-center justify-around px-5 bg-purple-500/40 text-white border-b border-gray-300/30 backdrop-blur-sm z-20">
+export default async function Navbar() {
+  const session = await auth()
+  const categories = await getNavbarCategories(5)
+  const hasCategories = categories && categories.length > 0
 
-            <div className="w-[85%] flex items-center justify-between text-md max-w-5xl lg:text-lg">
-                <Link href="/"><h1 className="font-primary font-medium">Titania</h1></Link>
+  return (
+    <header className="sticky top-0 w-full z-20 bg-purple-900/40 backdrop-blur-md border-b border-white/10">
+      <div className="w-[92%] max-w-6xl mx-auto flex items-center justify-between h-14">
+        {/* Logo */}
+        <Link href="/" className="font-primary text-lg font-normal tracking-[0.15em] text-white uppercase shrink-0">
+          Titania
+        </Link>
 
-                <nav>
-                    <ul className="flex items-center gap-5 font-primary ">
-                        <li>
-                            <Link href="/shop" className="">Shop</Link>
-                        </li>
-                        <li>
-                            <Link href="#" className="">Contact</Link>
-                        </li>
-                        <li>
-                            <CartIcon />
-                        </li>
-                    </ul>
-                </nav>
+        {/* Categories — desktop (only if there are categories) */}
+        {hasCategories && (
+          <nav className="hidden md:flex flex-1 justify-center items-center gap-6">
+            <Link
+              href="/shop"
+              className="flex items-center text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors font-secondary"
+            >
+              Shop
+            </Link>
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/shop?category=${cat.slug}`}
+                className="flex items-center text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors font-secondary"
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-4">
+          {/* Shop link on right when no categories */}
+          {!hasCategories && (
+            <Link
+              href="/shop"
+              className="hidden md:flex items-center text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors font-secondary"
+            >
+              Shop
+            </Link>
+          )}
+
+          {session?.user ? (
+            <div className="hidden sm:flex items-center gap-3">
+              <span className="flex items-center text-[11px] text-white/50 font-secondary max-w-[140px] truncate">
+                {session.user.email}
+              </span>
+              {session.user.role === "ADMIN" && (
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="text-[11px] uppercase tracking-wider font-secondary">Gestionar</span>
+                </Link>
+              )}
+              <form action={async () => {
+                "use server"
+                await signOut({ redirectTo: "/" })
+              }}>
+                <button
+                  type="submit"
+                  className="flex items-center text-[11px] text-white/50 hover:text-white transition-colors font-secondary uppercase tracking-wider cursor-pointer"
+                >
+                  Salir
+                </button>
+              </form>
             </div>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden sm:flex items-center text-white/70 hover:text-white transition-colors"
+              aria-label="Iniciar sesión"
+            >
+              <User className="w-5 h-5" />
+            </Link>
+          )}
+
+          <CartIcon />
+
+          {/* Mobile hamburger */}
+          <MobileMenu categories={categories ?? []} />
         </div>
-    )
+      </div>
+    </header>
+  )
 }

@@ -8,4 +8,6 @@ export interface OrderRepository {
     addOrder(order: Order): Promise<void>
     updateOrder(order: Order): Promise<void>
     deleteOrder(id: number): Promise<void>
+    findGuestOrdersByEmail(email: string): Promise<Array<{ id: number; email: string; userId: number | null }>>
+    linkOrdersToUser(email: string, userId: number): Promise<{ count: number }>
 }

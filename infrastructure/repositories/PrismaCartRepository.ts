@@ -1,6 +1,6 @@
 import { Cart } from "@/domain/cart/entities/cart";
 import { CartItem } from "@/domain/cart/entities/cartItem";
-import { CartRepository } from "@/domain/cart/repositories/cart-repository";
+import { CartRepository, CartItemInput } from "@/domain/cart/repositories/cart-repository";
 import { prisma } from "../db/prismaClient";
 import { CartStatus } from "@/domain/cart/entities/cartStatus";
 import { Prisma, CartStatus as PrismaCartStatus, CartItem as PrismaCartItem } from "@prisma/client";
@@ -72,6 +72,93 @@ export class PrismaCartRepository implements CartRepository {
         await prisma.cart.delete({
             where: { id }
         });
+    }
+
+    async addItem(cartId: number, productId: number, quantity: number, variantId: number | null): Promise<void> {
+        const cart = await prisma.cart.findUnique({
+            where: { id: cartId },
+            include: { items: true }
+        });
+        if (!cart) throw new Error("Cart not found");
+
+        const existingItem = cart.items.find(
+            item => item.productId === productId && (item.variantId ?? null) === (variantId ?? null)
+        );
+
+        if (existingItem) {
+            const desiredQty = existingItem.quantity + quantity;
+            const stock = await this.getProductStock(productId, variantId);
+            if (desiredQty > stock) {
+                throw new Error("Insufficient stock");
+            }
+            await prisma.cartItem.update({
+                where: { id: existingItem.id },
+                data: { quantity: desiredQty }
+            });
+        } else {
+            const stock = await this.getProductStock(productId, variantId);
+            if (quantity > stock) {
+                throw new Error("Insufficient stock");
+            }
+            await prisma.cartItem.create({
+                data: {
+                    cartId,
+                    productId,
+                    variantId,
+                    quantity
+                }
+            });
+        }
+    }
+
+    async mergeItems(cartId: number, items: CartItemInput[]): Promise<void> {
+        const cart = await prisma.cart.findUnique({
+            where: { id: cartId },
+            include: { items: true }
+        });
+        if (!cart) throw new Error("Cart not found");
+
+        for (const item of items) {
+            const existingItem = cart.items.find(
+                ci => ci.productId === item.productId && (ci.variantId ?? null) === (item.variantId ?? null)
+            );
+
+            if (existingItem) {
+                const desiredQty = existingItem.quantity + item.quantity;
+                const stock = await this.getProductStock(item.productId, item.variantId ?? null);
+                const cappedQty = Math.min(desiredQty, stock);
+                await prisma.cartItem.update({
+                    where: { id: existingItem.id },
+                    data: { quantity: cappedQty }
+                });
+            } else {
+                const stock = await this.getProductStock(item.productId, item.variantId ?? null);
+                const cappedQty = Math.min(item.quantity, stock);
+                if (cappedQty > 0) {
+                    await prisma.cartItem.create({
+                        data: {
+                            cartId,
+                            productId: item.productId,
+                            variantId: item.variantId,
+                            quantity: cappedQty
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    private async getProductStock(productId: number, variantId: number | null): Promise<number> {
+        if (variantId) {
+            const variant = await prisma.product.findUnique({
+                where: { id: productId },
+                include: { variants: true }
+            });
+            const v = variant?.variants?.find(v => v.id === variantId);
+            return v?.stock ?? 0;
+        }
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        return product?.stock ?? 0;
     }
 
     private mapToDomain(data: Prisma.CartGetPayload<{ include: { items: true } }>): Cart {

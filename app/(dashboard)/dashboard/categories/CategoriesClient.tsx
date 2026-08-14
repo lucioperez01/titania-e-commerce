@@ -51,14 +51,30 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                                 <tr className="text-md">
                                     <th className="text-center py-2">Nombre</th>
                                     <th className="text-center py-2">Slug</th>
+                                    <th className="text-center py-2">Navbar</th>
+                                    <th className="text-center py-2">Estado</th>
                                     <th className="text-center py-2">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="w-full text-white">
                                 {categories.map((c) => (
-                                    <tr key={c.id} className="w-full font-secondary bg-linear-to-r from-purple-600/30 to-purple-600/50 items-center justify-between hover:bg-purple-600/60 transition-colors group cursor-pointer">
+                                    <tr key={c.id} className={`w-full font-secondary bg-linear-to-r from-purple-600/30 to-purple-600/50 items-center justify-between hover:bg-purple-600/60 transition-colors group cursor-pointer ${c.isDeleted ? 'opacity-50' : ''}`}>
                                         <td className="text-center px-3 py-2">{c.name}</td>
                                         <td className="text-center px-3 py-2">{c.slug}</td>
+                                        <td className="text-center px-3 py-2">
+                                            {c.showInNavbar ? (
+                                                <span className="text-green-400 text-xs font-semibold">✓ Sí</span>
+                                            ) : (
+                                                <span className="text-white/50 text-xs">No</span>
+                                            )}
+                                        </td>
+                                        <td className="text-center px-3 py-2">
+                                            {c.isDeleted ? (
+                                                <span className="text-red-400 text-xs font-semibold">Eliminada</span>
+                                            ) : (
+                                                <span className="text-green-400 text-xs">Activa</span>
+                                            )}
+                                        </td>
                                         <td className="text-center px-3 py-2">
                                             <div className="flex justify-center gap-2">
                                                 <Button

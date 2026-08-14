@@ -35,7 +35,7 @@ describe("product use cases", () => {
         jest.clearAllMocks()
     })
 
-    const category: Category = { id: 1, name: "Ropa", slug: "ropa" }
+    const category: Category = { id: 1, name: "Ropa", slug: "ropa", showInNavbar: false }
 
     describe("createProduct", () => {
         it("creates a product with multiple images and generates a slug", async () => {

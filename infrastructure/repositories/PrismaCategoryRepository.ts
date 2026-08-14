@@ -3,19 +3,22 @@ import { prisma } from "../db/prismaClient";
 import { CategoryDTO } from "@/Interfaces/dto/product.dto";
 
 export class PrismaCategoriesRepository implements CategoryRepository {
-    private mapToDTO(category: { id: number; name: string; slug: string; image: string | null }): CategoryDTO {
+    private mapToDTO(category: { id: number; name: string; slug: string; image: string | null; showInNavbar: boolean; isDeleted: boolean }): CategoryDTO {
         return {
             id: category.id,
             name: category.name,
             slug: category.slug,
             image: category.image ?? undefined,
+            showInNavbar: category.showInNavbar,
+            isDeleted: category.isDeleted,
         }
     }
 
-    private mapToData(category: CategoryDTO): { name: string; slug: string; image?: string } {
-        const data: { name: string; slug: string; image?: string } = {
+    private mapToData(category: CategoryDTO): { name: string; slug: string; image?: string; showInNavbar: boolean } {
+        const data: { name: string; slug: string; image?: string; showInNavbar: boolean } = {
             name: category.name,
             slug: category.slug,
+            showInNavbar: category.showInNavbar ?? false,
         }
         if (category.image) {
             data.image = category.image
@@ -39,8 +42,17 @@ export class PrismaCategoriesRepository implements CategoryRepository {
         return this.mapToDTO(category);
     }
 
-    async findAllActive(): Promise<CategoryDTO[] | null> {
+    async findAllActive(): Promise<CategoryDTO[]> {
         const categories = await prisma.category.findMany({ where: { isDeleted: false } })
+        return categories.map(category => this.mapToDTO(category));
+    }
+
+    async findNavbarCategories(limit: number = 5): Promise<CategoryDTO[]> {
+        const categories = await prisma.category.findMany({
+            where: { isDeleted: false, showInNavbar: true },
+            take: limit,
+            orderBy: { name: 'asc' },
+        })
         return categories.map(category => this.mapToDTO(category));
     }
 

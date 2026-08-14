@@ -1,7 +1,8 @@
 type CategoryProps = {
     id: number,
     name: string,
-    image?: string
+    image?: string,
+    showInNavbar?: boolean
 }
 
 export class Category {
@@ -9,12 +10,14 @@ export class Category {
     public readonly name: string
     public readonly slug: string
     public readonly image?: string
+    public readonly showInNavbar: boolean
 
     constructor(props: CategoryProps) {
         this.id = props.id
         this.name = props.name
         this.slug = Category.toSlug(props.name)
         this.image = props.image
+        this.showInNavbar = props.showInNavbar ?? false
     }
 
     static toSlug(name: string): string {

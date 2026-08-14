@@ -21,9 +21,10 @@
 
 **Main Features:**
 - 🛍️ Product catalog with category filtering
-- 🛒 Functional shopping cart
+- 🛒 Functional shopping cart (guest + authenticated, with DB sync)
+- 🔐 Customer authentication (email/password + Google OAuth)
+- 👤 User management with role-based access (USER/ADMIN)
 - 💳 Payment gateway integration (Mercado Pago)
-- 👤 User management
 - ⭐ Rating and comments system
 - 📱 Responsive interface with Tailwind CSS
 
@@ -120,6 +121,14 @@ titania-e-commerce/
 │   │   │   └── role.ts           # Role enum
 │   │   └── repository/
 │   │       └── user-repository.ts # Repository interface
+│   ├── auth/                     # Authentication domain
+│   │   └── use-cases/
+│   │       └── register-user.ts  # Registration use-case
+│   ├── order/                    # Order domain
+│   │   ├── entities/
+│   │   ├── repositories/
+│   │   └── use-cases/
+│   │       └── link-orders-by-email.ts # Link guest orders to account
 │   └── providers/
 │       └── payment-provider.ts    # Abstract payment provider interface
 │
@@ -131,14 +140,20 @@ titania-e-commerce/
 │
 ├── lib/                          # Utilities and configuration
 │   ├── theme.ts                  # Theme configuration
-│   └── utils.ts                  # Utility functions
+│   ├── utils.ts                  # Utility functions
+│   └── auth.ts                   # NextAuth configuration (auth providers, callbacks)
 │
+├── middleware.ts                 # Route protection middleware (dashboard admin-only)
 ├── prisma/                       # Prisma configuration and schema
 │   ├── prisma.config.ts          # Prisma configuration
 │   ├── schema.prisma             # Database model definition
 │   └── migrations/               # Database migration history
 │
 ├── public/                       # Static public files
+│
+├── tests/                        # Test suites
+│   ├── unit/                     # Unit tests (mocked dependencies)
+│   └── integration/              # Integration tests (full flows)
 │
 ├── .eslintrc.mjs                 # ESLint configuration
 ├── components.json               # Components configuration
@@ -795,6 +810,42 @@ npm run prisma:seed        # Populate initial data (if exists)
 npm install
 ```
 
+### Authentication Setup
+
+The application supports two authentication methods:
+
+**Email/Password Registration:**
+- Users can register at `/register` with email + password (min 8 characters)
+- Login at `/login` with credentials
+- Passwords are hashed with bcrypt (10 rounds)
+
+**Google OAuth:**
+- Configure Google OAuth credentials in `.env.local`:
+  - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+  - Set authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+- Users click "Continuar con Google" on the login page
+- OAuth-only users have no password (passwordHash is null)
+
+**Admin Access:**
+- Set `ADMIN_EMAIL` in `.env.local` (comma-separated for multiple admins)
+- Users with matching emails are auto-promoted to ADMIN role on login/register
+- Admin users can access `/dashboard` routes (protected by middleware)
+
+**Required Environment Variables:**
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXTAUTH_SECRET` | Session encryption key | `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Base URL for auth callbacks | `http://localhost:3000` |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | `GOCSPX-xxx` |
+| `ADMIN_EMAIL` | Admin email(s), comma-separated | `admin@titania.com,owner@titania.com` |
+
+**Cart Behavior:**
+- Guest carts are stored in `localStorage`
+- On login, guest cart items are merged into the user's DB cart (quantities summed, capped at stock)
+- Logged-in users' carts are persisted to the database
+- The checkout page includes an opt-in marketing consent checkbox
+
 ### TypeScript Alias
 Configured in `tsconfig.json`:
 ```json
@@ -820,6 +871,11 @@ npm run dev          # Start development server (localhost:3000)
 # Production
 npm run build        # Build the application
 npm run start        # Start production server
+
+# Testing
+npx jest             # Run all tests
+npx jest tests/unit/ # Run unit tests only
+npx jest tests/integration/ # Run integration tests only
 
 # Linting
 npm run lint         # Run ESLint

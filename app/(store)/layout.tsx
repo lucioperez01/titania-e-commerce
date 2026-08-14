@@ -11,7 +11,7 @@ export default function StoreLayout({
             <div className="flex flex-col min-h-screen items-center justify-between gap-5">
                 <Navbar />
 
-                <main className="flex-1 w-full">
+                <main className="">
                     {children}
                 </main>
 

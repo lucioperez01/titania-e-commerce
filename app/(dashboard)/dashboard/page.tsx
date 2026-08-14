@@ -10,7 +10,8 @@ import {
     ShoppingCart,
     Users,
     BoxSelect,
-    TrendingUp
+    TrendingUp,
+    Store
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -112,7 +113,7 @@ export default function DashboardPage() {
                             <h3 className="font-semibold leading-none tracking-tight text-lg">Administrador de Inventario</h3>
                             <p className="text-sm text-slate-300">Acciones rápidas para tu tienda.</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                             <QuickActionCard
                                 icon={<BoxSelect className="w-5 h-5 text-rose-400" />}
                                 label="Productos"
@@ -124,6 +125,12 @@ export default function DashboardPage() {
                                 label="Categorias"
                                 description="Gestionar categorias"
                                 href="/dashboard/categories"
+                            />
+                            <QuickActionCard
+                                icon={<Store className="w-5 h-5 text-amber-400" />}
+                                label="Ir a la tienda"
+                                description="Ver tu tienda online"
+                                href="/"
                             />
                         </div>
                     </div>

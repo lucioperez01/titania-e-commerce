@@ -8,10 +8,10 @@ export default function CartIcon() {
     const { itemCount } = useCart()
 
     return (
-        <Link href="/cart" className="relative">
-            <ShoppingCart className="w-6 h-6" />
+        <Link href="/cart" className="relative flex items-center">
+            <ShoppingCart className="w-5 h-5 text-white" />
             {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
                     {itemCount}
                 </span>
             )}

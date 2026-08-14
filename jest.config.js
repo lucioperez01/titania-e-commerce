@@ -13,9 +13,10 @@ module.exports = {
     ...tsJestTransformCfg,
   },
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1"
+    "^@/(.*)$": "<rootDir>/$1",
+    "^next-auth/react$": "<rootDir>/__mocks__/next-auth-react.ts"
   },
-  transformIgnorePatterns: ["node_modules/"],
+  transformIgnorePatterns: ["node_modules/(?!(next-auth)/)"],
   modulePaths: ["<rootDir>"],
   rootDir: ".",
 };

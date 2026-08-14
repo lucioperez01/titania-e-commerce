@@ -7,9 +7,9 @@ export class User {
     constructor(
         public id: number,
         public email: string,
-        public password: string,
-        public firstName: string,
-        public lastName: string,
+        public password: string | null,
+        public firstName: string | null,
+        public lastName: string | null,
         public role: Role,
         public createdAt?: Date,
         public updatedAt?: Date,

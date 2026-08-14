@@ -1,10 +1,12 @@
-import { Category } from '../../entities/category'
+import { CategoryDTO } from '@/Interfaces/dto/product.dto'
 
 export interface CategoryRepository {
-    findAll(): Promise<Category[]>
-    findById(id: number): Promise<Category | null>
-    findBySlug(slug: string): Promise<Category | null>
-    addCategory(category: Category): Promise<void>
-    updateCategory(category: Category): Promise<void>
+    findAll(): Promise<CategoryDTO[]>
+    findById(id: number): Promise<CategoryDTO | null>
+    findBySlug(slug: string): Promise<CategoryDTO | null>
+    findAllActive(): Promise<CategoryDTO[]>
+    findNavbarCategories(limit?: number): Promise<CategoryDTO[]>
+    addCategory(category: CategoryDTO): Promise<void>
+    updateCategory(category: CategoryDTO): Promise<void>
     deleteCategory(id: number): Promise<void>
 }

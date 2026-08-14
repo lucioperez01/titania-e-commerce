@@ -116,4 +116,19 @@ export class PrismaOrderRepository implements OrderRepository {
                 })
             }
         }
+
+        async findGuestOrdersByEmail(email: string): Promise<Array<{ id: number; email: string; userId: number | null }>> {
+            return prisma.order.findMany({
+                where: { email, userId: null },
+                select: { id: true, email: true, userId: true },
+            });
+        }
+
+        async linkOrdersToUser(email: string, userId: number): Promise<{ count: number }> {
+            const result = await prisma.order.updateMany({
+                where: { email, userId: null },
+                data: { userId },
+            });
+            return { count: result.count };
+        }
     }

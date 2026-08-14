@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Package, Tags } from "lucide-react"
+import { LayoutDashboard, Package, Tags, Store } from "lucide-react"
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -19,7 +19,7 @@ export default function DashboardLayout({
 
     return (
         <div className="w-full flex flex-col md:flex-row min-h-screen gap-5">
-            <aside className="w-full md:w-64 shrink-0 p-6 border-b md:border-b-0 md:border-r border-white/10">
+            <aside className="w-full md:w-64 shrink-0 p-6 border-b md:border-b-0 md:border-r border-white/10 md:flex md:flex-col">
                 <nav className="flex md:flex-col gap-2">
                     {navItems.map((item) => {
                         const isActive =
@@ -46,6 +46,13 @@ export default function DashboardLayout({
                         )
                     })}
                 </nav>
+                <Link
+                    href="/shop"
+                    className="hidden md:flex items-center gap-3 px-4 py-3 mt-auto rounded-lg text-slate-300 hover:bg-purple-600/20 hover:text-white transition-colors"
+                >
+                    <Store className="w-5 h-5" />
+                    <span>Ir a la tienda</span>
+                </Link>
             </aside>
             <main className="flex-1 w-full max-w-[90%] mx-auto md:mx-0 md:max-w-none">
                 {children}

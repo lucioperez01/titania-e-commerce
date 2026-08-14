@@ -38,6 +38,8 @@ export type CategoryDTO = {
     name: string
     slug: string
     image?: string
+    showInNavbar?: boolean
+    isDeleted?: boolean
 }
 
 export function categoryToDTO(category: Category): CategoryDTO {
@@ -46,6 +48,7 @@ export function categoryToDTO(category: Category): CategoryDTO {
         name: category.name,
         slug: category.slug,
         image: category.image,
+        showInNavbar: category.showInNavbar,
     }
 }
 

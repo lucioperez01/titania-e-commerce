@@ -1,5 +1,6 @@
 import { Product } from "@/domain/product/entities/product"
 import { ProductImage } from "@/domain/product/entities/image"
+import { Category } from "@/domain/product/entities/category"
 import { PrismaProductRepository } from "@/infrastructure/repositories/PrismaProductRepository"
 import { PrismaCategoriesRepository } from "@/infrastructure/repositories/PrismaCategoryRepository"
 
@@ -19,11 +20,18 @@ export async function createProduct(input: CreateProductInput): Promise<void> {
     }
 
     const categoryRepo = new PrismaCategoriesRepository()
-    const category = await categoryRepo.findById(input.categoryId)
+    const categoryDTO = await categoryRepo.findById(input.categoryId)
 
-    if (!category) {
+    if (!categoryDTO) {
         throw new Error("La categoría no existe.")
     }
+
+    const category = new Category({
+        id: categoryDTO.id,
+        name: categoryDTO.name,
+        image: categoryDTO.image,
+        showInNavbar: categoryDTO.showInNavbar,
+    })
 
     const product = new Product({
         id: 0,

@@ -2,11 +2,10 @@ import { User } from "@/domain/user/entities/user";
 import { UserRepository } from "@/domain/user/repository/user-repository";
 import { prisma } from "../db/prismaClient";
 import { Role } from "@/domain/user/entities/role";
-import { Address } from "@/domain/user/entities/address";
 
 export class PrismaUserRepository implements UserRepository {
 
-    private mapToUser(user: any): User { // eslint-disable-line @typescript-eslint/no-explicit-any -- accesses fields not present on the generated Prisma User type (cart/country/zipCode); proper typing requires schema/domain alignment
+    private mapToUser(user: any): User { // eslint-disable-line @typescript-eslint/no-explicit-any -- accesses fields not present on the generated Prisma User type
         return new User(
             user.id,
             user.email,
@@ -34,6 +33,11 @@ export class PrismaUserRepository implements UserRepository {
         return user ? this.mapToUser(user) : null
     }
 
+    async findByEmail(email: string): Promise<User | null> {
+        const user = await prisma.user.findUnique({ where: { email } })
+        return user ? this.mapToUser(user) : null
+    }
+
     async registerUser(user: User): Promise<void> {
         if (user != null) {
             await prisma.user.create({
@@ -43,22 +47,18 @@ export class PrismaUserRepository implements UserRepository {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     role: Role.USER,
-                    phone: user.phone
+                    phone: user.phone ?? undefined
                 }
             })
         }
     }
 
     async deleteUser(id: number): Promise<void> {
-        if (id != null && this.findById(id) != null) {
+        const existing = await this.findById(id);
+        if (existing != null) {
             await prisma.user.delete({ where: { id } })
         } else {
             throw new Error("El usuario no existe.")
         }
-    }
-
-    async findByCity(address: Address): Promise<User[]> {
-        const product = await prisma.user.findMany({ where: { address: address.city } })
-        return product.map(u => this.mapToUser(u))
     }
 }

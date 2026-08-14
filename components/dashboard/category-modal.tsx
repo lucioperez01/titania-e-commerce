@@ -74,6 +74,18 @@ export default function CategoryModal({ category, isOpen, mode = "create", onClo
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
                         />
                     </div>
+                    <div className="mb-4 flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="showInNavbar"
+                            name="showInNavbar"
+                            defaultChecked={category?.showInNavbar}
+                            className="w-4 h-4 rounded border-gray-300"
+                        />
+                        <label htmlFor="showInNavbar" className="text-sm font-medium text-neutral-900">
+                            Mostrar en navbar (máx. 5 categorías)
+                        </label>
+                    </div>
                     <div className="flex justify-between">
                         <button
                             type="button"

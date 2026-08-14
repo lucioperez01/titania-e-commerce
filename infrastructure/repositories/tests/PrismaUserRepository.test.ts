@@ -1,55 +1,144 @@
+// Mock prisma client BEFORE any imports — isolates tests from live DB
+const fakeUsers: Array<{
+  id: number;
+  email: string;
+  emailVerified: Date | null;
+  firstName: string | null;
+  lastName: string | null;
+  passwordHash: string | null;
+  role: string;
+  phone: string | null;
+  mailing: boolean;
+  isDeleted: boolean;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}> = [];
 
-import { User } from "../../../domain/user/entities/user"
-import { Role } from '../../../domain/user/entities/role';
-import { prisma } from '../../db/prismaClient';
-import { PrismaUserRepository } from '../PrismaUserRepository';
-import dotenv from "dotenv"
+const mockPrismaUser = {
+  findMany: jest.fn(async () => [...fakeUsers]),
+  findUnique: jest.fn(async ({ where }: { where: { id?: number; email?: string } }) => {
+    if (where.id !== undefined) return fakeUsers.find((u) => u.id === where.id) ?? null;
+    if (where.email !== undefined) return fakeUsers.find((u) => u.email === where.email) ?? null;
+    return null;
+  }),
+  create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+    const id = fakeUsers.length + 1;
+    const newUser = {
+      id,
+      email: (data.email as string) ?? "",
+      emailVerified: (data.emailVerified as Date) ?? null,
+      firstName: (data.firstName as string) ?? null,
+      lastName: (data.lastName as string) ?? null,
+      passwordHash: (data.passwordHash === undefined ? null : data.passwordHash) as string | null,
+      role: (data.role as string) ?? "USER",
+      phone: (data.phone as string) ?? null,
+      mailing: (data.mailing as boolean) ?? false,
+      isDeleted: false,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    fakeUsers.push(newUser);
+    return newUser;
+  }),
+  delete: jest.fn(async ({ where }: { where: { id: number } }) => {
+    const idx = fakeUsers.findIndex((u) => u.id === where.id);
+    if (idx === -1) throw new Error("Record to delete not found.");
+    const [deleted] = fakeUsers.splice(idx, 1);
+    return deleted;
+  }),
+  update: jest.fn(async ({ where, data }: { where: { id: number }; data: Record<string, unknown> }) => {
+    const idx = fakeUsers.findIndex((u) => u.id === where.id);
+    if (idx === -1) throw new Error("Record to update not found.");
+    fakeUsers[idx] = { ...fakeUsers[idx], ...data, updatedAt: new Date() };
+    return fakeUsers[idx];
+  }),
+};
 
-dotenv.config({ path: ".env" })
-console.log(process.env.DATABASE_URL)
+jest.mock("@/infrastructure/db/prismaClient", () => ({
+  prisma: { user: mockPrismaUser },
+}));
 
-describe('PrismaUserRepository Integration Test', () => {
-  const userRepository = new PrismaUserRepository();
+import { PrismaUserRepository } from "../PrismaUserRepository";
+import { User } from "@/domain/user/entities/user";
+import { Role } from "@/domain/user/entities/role";
 
-  beforeAll(async () => {
-    await prisma.user.deleteMany();
+describe("PrismaUserRepository", () => {
+  let repo: PrismaUserRepository;
+
+  beforeEach(() => {
+    fakeUsers.length = 0;
+    jest.clearAllMocks();
+    repo = new PrismaUserRepository();
   });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
+  describe("registerUser", () => {
+    it("should register and retrieve users correctly", async () => {
+      const mockUser = new User(0, "test@titania.com", "hashed123", "Juan", "Perez", Role.USER);
+      await repo.registerUser(mockUser);
+
+      const allUsers = await repo.findAll();
+      expect(allUsers.length).toBe(1);
+      expect(allUsers[0].email).toBe("test@titania.com");
+
+      const foundUser = await repo.findById(allUsers[0].id);
+      expect(foundUser).not.toBeNull();
+      expect(foundUser?.email).toBe("test@titania.com");
+    });
+
+    it("should create a user with null passwordHash (OAuth user)", async () => {
+      const oauthUser = new User(0, "oauth@titania.com", null as unknown as string, null, null, Role.USER);
+      await repo.registerUser(oauthUser);
+
+      const allUsers = await repo.findAll();
+      expect(allUsers[0].password).toBeNull();
+    });
   });
 
-  it('should register and retrieve users correctly', async () => {
-    const mockUser = new User(
-      1,
-      "[EMAIL_ADDRESS]",
-      "123456",
-      "Juan",
-      "Perez",
-      Role.USER,
-    )
+  describe("findByEmail", () => {
+    it("should return a user when email exists", async () => {
+      fakeUsers.push({
+        id: 1, email: "find@example.com", emailVerified: null,
+        firstName: "Ana", lastName: "Garcia", passwordHash: "hash",
+        role: "USER", phone: null, mailing: false,
+        isDeleted: false, deletedAt: null, createdAt: new Date(), updatedAt: new Date(),
+      });
 
-    console.log('Intentando registrar usuario:', mockUser.email);
-    await userRepository.registerUser(mockUser);
-    const createdUser: User | null = await userRepository.findById(mockUser.id);
-    console.log('Usu77ario registrado exitosamente:', createdUser);
+      const user = await repo.findByEmail("find@example.com");
+      expect(user).not.toBeNull();
+      expect(user?.email).toBe("find@example.com");
+    });
 
-    expect(createdUser).not.toBeNull();
-    expect(createdUser?.email).toBe(mockUser.email);
+    it("should return null when email does not exist", async () => {
+      const user = await repo.findByEmail("nonexistent@example.com");
+      expect(user).toBeNull();
+    });
+  });
 
-    console.log('Consultando base de datos para verificar persistencia...');
-    const foundUser: User | null = await userRepository.findById(mockUser.id);
-    console.log('Usuario recuperado de la consulta:', foundUser);
+  describe("deleteUser", () => {
+    it("should delete an existing user", async () => {
+      fakeUsers.push({
+        id: 1, email: "delete@example.com", emailVerified: null,
+        firstName: null, lastName: null, passwordHash: "hash",
+        role: "USER", phone: null, mailing: false,
+        isDeleted: false, deletedAt: null, createdAt: new Date(), updatedAt: new Date(),
+      });
 
-    expect(foundUser).not.toBeNull();
-    expect(foundUser?.id).toBe(mockUser.id);
+      await repo.deleteUser(1);
+      const result = await repo.findById(1);
+      expect(result).toBeNull();
+    });
 
-    console.log('Probando consulta de listado general...');
-    const allUsers: User[] = await userRepository.findAll();
-    console.log(`Cantidad de usuarios en DB: ${allUsers.length}`);
+    it("should throw when user does not exist", async () => {
+      await expect(repo.deleteUser(999)).rejects.toThrow("El usuario no existe.");
+    });
+  });
 
-    expect(allUsers.length).toBeGreaterThan(0);
-    expect(allUsers.some(u => u.email === mockUser.email)).toBe(true);
+  describe("findById", () => {
+    it("should return null for non-existent id", async () => {
+      const user = await repo.findById(999);
+      expect(user).toBeNull();
+    });
   });
 });
-
