@@ -6,9 +6,12 @@ import { Category } from "@/domain/product/entities/category"
 export class PrismaProductRepository implements ProductRepository {
 
     async findAll(options?: FindAllOptions): Promise<Product[]> {
-        const where: { isDeleted: boolean; isOnline?: boolean } = { isDeleted: false }
+        const where: { isDeleted: boolean; isOnline?: boolean; categoryId?: number } = { isDeleted: false }
         if (options?.isOnline) {
             where.isOnline = true
+        }
+        if (options?.categoryId) {
+            where.categoryId = options.categoryId
         }
         const products = await prisma.product.findMany({
             where,

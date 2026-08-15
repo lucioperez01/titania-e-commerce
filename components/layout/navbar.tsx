@@ -1,9 +1,11 @@
 import Link from "next/link"
 import CartIcon from "@/components/cart/cart-icon"
+import SearchButton from "@/components/search/search-button"
 import { auth, signOut } from "@/lib/auth"
 import { getNavbarCategories } from "@/application/use-cases/get-navbar-categories"
 import { User, LayoutDashboard } from "lucide-react"
 import MobileMenu from "./mobile-menu"
+import CategoryNav from "./category-nav"
 
 export default async function Navbar() {
   const session = await auth()
@@ -19,25 +21,7 @@ export default async function Navbar() {
         </Link>
 
         {/* Categories — desktop (only if there are categories) */}
-        {hasCategories && (
-          <nav className="hidden md:flex flex-1 justify-center items-center gap-6">
-            <Link
-              href="/shop"
-              className="flex items-center text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors font-secondary"
-            >
-              Shop
-            </Link>
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/shop?category=${cat.slug}`}
-                className="flex items-center text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors font-secondary"
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </nav>
-        )}
+        {hasCategories && <CategoryNav categories={categories} />}
 
         {/* Actions */}
         <div className="flex items-center gap-4">
@@ -87,6 +71,7 @@ export default async function Navbar() {
             </Link>
           )}
 
+          <SearchButton />
           <CartIcon />
 
           {/* Mobile hamburger */}

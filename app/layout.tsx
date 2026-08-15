@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Manrope, Merriweather_Sans, Inter } from "next/font/google";
 import { NextAuthSessionProvider } from "@/components/providers/session-provider";
 import { CartProvider } from "@/components/cart/cart-provider";
+import { CartDrawerProvider } from "@/components/cart/cart-drawer-context";
+import CartDrawer from "@/components/cart/cart-drawer";
+import { SearchProvider } from "@/components/search/search-context";
+import SearchOverlay from "@/components/search/search-overlay";
 import "./globals.css";
 
 const primary = Manrope({
@@ -39,7 +43,13 @@ export default function RootLayout({
         className={`${primary.variable} bg-linear-to-tr from-purple-500/90 to-purple-900/90 antialiased min-h-screen flex flex-col items-center justify-between ${secondary.variable} ${tertiary.variable} overflow-x-hidden`}>
           <NextAuthSessionProvider>
             <CartProvider>
-              {children}
+              <CartDrawerProvider>
+                <SearchProvider>
+                  {children}
+                  <CartDrawer />
+                  <SearchOverlay />
+                </SearchProvider>
+              </CartDrawerProvider>
             </CartProvider>
           </NextAuthSessionProvider>
       </body>

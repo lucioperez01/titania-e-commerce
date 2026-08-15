@@ -4,6 +4,7 @@ import { PrismaCategoriesRepository } from "@/infrastructure/repositories/Prisma
 export type CreateCategoryInput = {
     name: string
     image?: string
+    description?: string
     showInNavbar?: boolean
 }
 
@@ -29,6 +30,7 @@ export async function createCategory(input: CreateCategoryInput): Promise<void> 
         id: 0,
         name: input.name.trim(),
         image: input.image,
+        description: input.description,
         showInNavbar: input.showInNavbar ?? false,
     })
 

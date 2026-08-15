@@ -3,25 +3,29 @@ import { prisma } from "../db/prismaClient";
 import { CategoryDTO } from "@/Interfaces/dto/product.dto";
 
 export class PrismaCategoriesRepository implements CategoryRepository {
-    private mapToDTO(category: { id: number; name: string; slug: string; image: string | null; showInNavbar: boolean; isDeleted: boolean }): CategoryDTO {
+    private mapToDTO(category: { id: number; name: string; slug: string; image: string | null; description: string | null; showInNavbar: boolean; isDeleted: boolean }): CategoryDTO {
         return {
             id: category.id,
             name: category.name,
             slug: category.slug,
             image: category.image ?? undefined,
+            description: category.description ?? undefined,
             showInNavbar: category.showInNavbar,
             isDeleted: category.isDeleted,
         }
     }
 
-    private mapToData(category: CategoryDTO): { name: string; slug: string; image?: string; showInNavbar: boolean } {
-        const data: { name: string; slug: string; image?: string; showInNavbar: boolean } = {
+    private mapToData(category: CategoryDTO): { name: string; slug: string; image?: string; description?: string; showInNavbar: boolean } {
+        const data: { name: string; slug: string; image?: string; description?: string; showInNavbar: boolean } = {
             name: category.name,
             slug: category.slug,
             showInNavbar: category.showInNavbar ?? false,
         }
         if (category.image) {
             data.image = category.image
+        }
+        if (category.description) {
+            data.description = category.description
         }
         return data
     }

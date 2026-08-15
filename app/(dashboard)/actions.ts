@@ -124,6 +124,7 @@ export async function createCategoryAction(formData: FormData): Promise<ActionRe
     try {
         const name = parseString(formData.get("name")) ?? ""
         const image = parseString(formData.get("image"))
+        const description = parseString(formData.get("description"))
         const showInNavbar = formData.get("showInNavbar") === "on"
 
         if (!name) return { success: false, error: "El nombre es obligatorio." }
@@ -133,6 +134,7 @@ export async function createCategoryAction(formData: FormData): Promise<ActionRe
         const input: CreateCategoryInput = {
             name,
             image: parseString(formData.get("image")),
+            description,
             showInNavbar,
         }
 
@@ -149,6 +151,7 @@ export async function updateCategoryAction(formData: FormData): Promise<ActionRe
     try {
         const id = parseNumber(formData.get("id")) ?? 0
         const name = parseString(formData.get("name"))
+        const description = parseString(formData.get("description"))
         const showInNavbar = formData.get("showInNavbar") === "on"
 
         if (name !== undefined && !name) return { success: false, error: "El nombre no puede estar vacío." }
@@ -157,6 +160,7 @@ export async function updateCategoryAction(formData: FormData): Promise<ActionRe
             id,
             name,
             image: parseString(formData.get("image")),
+            description,
             showInNavbar,
         }
 

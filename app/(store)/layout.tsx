@@ -7,16 +7,14 @@ export default function StoreLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <>
-            <div className="flex flex-col min-h-screen items-center justify-between gap-5">
-                <Navbar />
+        <div className="flex flex-col min-h-screen items-center justify-between gap-5">
+            <Navbar />
 
-                <main className="">
-                    {children}
-                </main>
+            <main className="">
+                {children}
+            </main>
 
-                <Footer />
-            </div>
-        </>
+            <Footer />
+        </div>
     );
 }

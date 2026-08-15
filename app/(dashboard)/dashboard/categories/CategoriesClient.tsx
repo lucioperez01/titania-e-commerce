@@ -51,6 +51,7 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                                 <tr className="text-md">
                                     <th className="text-center py-2">Nombre</th>
                                     <th className="text-center py-2">Slug</th>
+                                    <th className="text-center py-2">Descripción</th>
                                     <th className="text-center py-2">Navbar</th>
                                     <th className="text-center py-2">Estado</th>
                                     <th className="text-center py-2">Acciones</th>
@@ -61,6 +62,14 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                                     <tr key={c.id} className={`w-full font-secondary bg-linear-to-r from-purple-600/30 to-purple-600/50 items-center justify-between hover:bg-purple-600/60 transition-colors group cursor-pointer ${c.isDeleted ? 'opacity-50' : ''}`}>
                                         <td className="text-center px-3 py-2">{c.name}</td>
                                         <td className="text-center px-3 py-2">{c.slug}</td>
+                                        <td className="text-center px-3 py-2">
+                                            <span className="text-xs text-white/70" title={c.description ?? ""}>
+                                                {c.description
+                                                    ? (c.description.length > 40 ? c.description.substring(0, 40) + "..." : c.description)
+                                                    : "—"
+                                                }
+                                            </span>
+                                        </td>
                                         <td className="text-center px-3 py-2">
                                             {c.showInNavbar ? (
                                                 <span className="text-green-400 text-xs font-semibold">✓ Sí</span>

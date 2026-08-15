@@ -80,6 +80,7 @@ model Category {
   name          String    @unique
   slug          String    @unique
   image         String?
+  description   String?   @db.VarChar(300)
   showInNavbar  Boolean   @default(false)
   isDeleted     Boolean   @default(false)
   deletedAt     DateTime?

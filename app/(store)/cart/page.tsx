@@ -6,7 +6,6 @@ export default async function CartPage() {
 
     return (
         <main className="max-w-6xl mx-auto p-5">
-            <h1 className="text-2xl font-bold text-white mb-5">Carrito</h1>
             <CartPageClient products={products} />
         </main>
     )

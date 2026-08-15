@@ -16,6 +16,7 @@ type Props = {
 
 export default function CategoryModal({ category, isOpen, mode = "create", onClose, action }: Props) {
     const [error, setError] = useState<string | null>(null)
+    const [descLength, setDescLength] = useState(category?.description?.length ?? 0)
     const [isPending, startTransition] = useTransition()
 
     if (!isOpen) return null
@@ -73,6 +74,22 @@ export default function CategoryModal({ category, isOpen, mode = "create", onClo
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
                         />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="description" className="block text-sm font-medium mb-2 text-neutral-900">
+                            Descripción <span className="text-neutral-500 font-normal">(opcional, máx. 300 caracteres)</span>
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            defaultValue={category?.description}
+                            maxLength={300}
+                            rows={3}
+                            onChange={(e) => setDescLength(e.target.value.length)}
+                            placeholder="Descripción corta de la categoría..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900 resize-none"
+                        />
+                        <p className="text-xs text-neutral-500 mt-1 text-right">{descLength}/300</p>
                     </div>
                     <div className="mb-4 flex items-center gap-2">
                         <input

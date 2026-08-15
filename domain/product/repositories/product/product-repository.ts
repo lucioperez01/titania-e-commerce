@@ -3,6 +3,7 @@ import { Category } from '../../entities/category'
 
 export type FindAllOptions = {
     isOnline?: boolean
+    categoryId?: number
 }
 
 export interface ProductRepository {

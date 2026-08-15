@@ -6,6 +6,7 @@ export type UpdateCategoryInput = {
 } & Partial<{
     name: string
     image: string
+    description: string
     showInNavbar: boolean
 }>
 
@@ -21,6 +22,7 @@ export async function updateCategory(input: UpdateCategoryInput): Promise<void> 
         id: existing.id,
         name: input.name ?? existing.name,
         image: input.image ?? existing.image,
+        description: input.description ?? existing.description,
         showInNavbar: input.showInNavbar ?? existing.showInNavbar,
     })
 

@@ -67,8 +67,10 @@ export default function CartPage({ products }: CartPageProps) {
     }
 
     return (
-        <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <section className="rounded-md border border-slate-200/10 p-5 min-h-128">
+        <>
+            <h1 className="text-2xl font-bold text-white mb-5">Carrito</h1>
+            <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+            <section className="rounded-md border border-slate-200/10 p-5 min-h-128">
             <CartItemList products={products} />
 
             <div className="mt-6 rounded-xl border border-purple-500/20 bg-purple-900/30 p-4 text-slate-300">
@@ -191,5 +193,6 @@ export default function CartPage({ products }: CartPageProps) {
             </div>
         </aside>
         </div>
+        </>
     )
     }

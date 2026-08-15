@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 type Category = {
   id: number
@@ -12,6 +13,8 @@ type Category = {
 
 export default function MobileMenu({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const activeCategory = searchParams.get("category")
 
   return (
     <div className="md:hidden">
@@ -29,7 +32,9 @@ export default function MobileMenu({ categories }: { categories: Category[] }) {
             <Link
               href="/shop"
               onClick={() => setOpen(false)}
-              className="text-sm uppercase tracking-widest text-white/80 hover:text-white transition-colors font-secondary py-2"
+              className={`text-sm uppercase tracking-widest transition-colors font-secondary py-2 ${
+                !activeCategory ? "text-white" : "text-white/80 hover:text-white"
+              }`}
             >
               Shop
             </Link>
@@ -38,7 +43,9 @@ export default function MobileMenu({ categories }: { categories: Category[] }) {
                 key={cat.id}
                 href={`/shop?category=${cat.slug}`}
                 onClick={() => setOpen(false)}
-                className="text-sm uppercase tracking-widest text-white/80 hover:text-white transition-colors font-secondary py-2"
+                className={`text-sm uppercase tracking-widest transition-colors font-secondary py-2 ${
+                  activeCategory === cat.slug ? "text-white font-medium" : "text-white/80 hover:text-white"
+                }`}
               >
                 {cat.name}
               </Link>
