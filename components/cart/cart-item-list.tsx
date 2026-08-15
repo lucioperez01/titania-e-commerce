@@ -34,7 +34,7 @@ export default function CartItemList({ products }: CartItemListProps) {
                         const lineTotal = product.price * item.quantity
                         return (
                             <li
-                                key={item.productId}
+                                key={`${item.productId}-${item.variantId ?? 'default'}`}
                                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-md border border-slate-200/10 p-4 text-white"
                             >
                                 <div className="flex items-start gap-4 min-w-0">
@@ -91,7 +91,7 @@ export default function CartItemList({ products }: CartItemListProps) {
                                         variant="ghost"
                                         size="sm"
                                         aria-label="Remove"
-                                        onClick={() => dispatch({ type: "REMOVE", productId: item.productId })}
+                                        onClick={() => dispatch({ type: "REMOVE", productId: item.productId, variantId: item.variantId })}
                                     >
                                         <Trash2 className="size-4" />
                                     </Button>

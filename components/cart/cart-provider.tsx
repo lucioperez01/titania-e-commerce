@@ -1,10 +1,11 @@
 "use client"
 
-import { createContext, useContext, useEffect, useReducer, ReactNode } from "react"
+import { createContext, useContext, useEffect, useReducer, useRef, useCallback, ReactNode } from "react"
 import { useSession } from "next-auth/react"
 import { CartItemDTO } from "@/Interfaces/dto/cart.dto"
 import { getCart } from "@/domain/cart/use-cases/get-cart"
 import { addToCart } from "@/domain/cart/use-cases/add-to-cart"
+import { mergeCart } from "@/domain/cart/use-cases/merge-cart"
 import { PrismaCartRepository } from "@/infrastructure/repositories/PrismaCartRepository"
 
 const STORAGE_KEY = "titania-cart"
@@ -126,7 +127,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 const cartRepository = new PrismaCartRepository()
 
 export function CartProvider({ children }: { children: ReactNode }) {
-    const [state, dispatch] = useReducer(cartReducer, { items: [], isHydrating: false })
+    const [state, dispatch] = useReducer(cartReducer, { items: [], isHydrating: true })
     const { data: session } = useSession()
     const sessionUserId = session?.user?.id ? Number(session.user.id) : null
 
@@ -142,46 +143,84 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 window.localStorage.removeItem(STORAGE_KEY)
             }
         }
+        dispatch({ type: "SET_HYDRATING", isHydrating: false })
     }, [])
 
     // DB hydration when session user ID is available
+    const hasHydratedFromDB = useRef(false)
+
     useEffect(() => {
         if (typeof window === "undefined") return
         if (!sessionUserId) return
+        if (hasHydratedFromDB.current) return
 
-        async function hydrateFromDB() {
+        async function hydrateFromDB(uid: number) {
             dispatch({ type: "SET_HYDRATING", isHydrating: true })
             try {
-                const dbCart = await getCart(cartRepository, sessionUserId)
-                if (dbCart.items.length > 0) {
-                    dispatch({ type: "HYDRATE", items: dbCart.items })
-                    // Clear localStorage since we now use DB
-                    window.localStorage.removeItem(STORAGE_KEY)
-                } else {
-                    dispatch({ type: "SET_HYDRATING", isHydrating: false })
+                const localRaw = window.localStorage.getItem(STORAGE_KEY)
+                let localItems: CartItemDTO[] = []
+                if (localRaw) {
+                    try {
+                        localItems = JSON.parse(localRaw) as CartItemDTO[]
+                    } catch {
+                        window.localStorage.removeItem(STORAGE_KEY)
+                    }
                 }
-            } catch {
+
+                if (localItems.length > 0) {
+                    let mergeSucceeded = false
+                    try {
+                        await mergeCart(
+                            cartRepository,
+                            uid,
+                            localItems.map(i => ({ productId: i.productId, quantity: i.quantity, variantId: i.variantId ?? null }))
+                        )
+                        mergeSucceeded = true
+                    } catch {
+                        // Merge failed — keep localStorage items as fallback
+                    }
+                    if (mergeSucceeded) {
+                        window.localStorage.removeItem(STORAGE_KEY)
+                    }
+                }
+
+                try {
+                    const dbCart = await getCart(cartRepository, uid)
+                    if (dbCart.items.length > 0) {
+                        dispatch({ type: "HYDRATE", items: dbCart.items })
+                    } else if (localItems.length > 0) {
+                        // DB is empty but we had localStorage items — restore them
+                        dispatch({ type: "HYDRATE", items: localItems })
+                    }
+                } catch {
+                    // DB read failed — restore from localStorage if available
+                    if (localItems.length > 0) {
+                        dispatch({ type: "HYDRATE", items: localItems })
+                    }
+                }
+            } finally {
                 dispatch({ type: "SET_HYDRATING", isHydrating: false })
             }
+            hasHydratedFromDB.current = true
         }
 
-        hydrateFromDB()
+        hydrateFromDB(sessionUserId)
     }, [sessionUserId])
 
     // Persist to localStorage for guests, or to DB for logged-in users
+    const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
     useEffect(() => {
         if (typeof window === "undefined") return
         if (state.isHydrating) return
 
         if (sessionUserId) {
-            // Logged in: persist last item change to DB (incremental)
-            // Only persist if there are items and the change was user-initiated
-            const persistToDB = async () => {
+            if (persistTimerRef.current) clearTimeout(persistTimerRef.current)
+            persistTimerRef.current = setTimeout(async () => {
                 try {
                     const dbCart = await getCart(cartRepository, sessionUserId)
                     const cartId = dbCart.id
                     if (cartId > 0 && state.items.length > 0) {
-                        // Persist each item (in production, batch this)
                         for (const item of state.items) {
                             await addToCart(cartRepository, cartId, item.productId, item.quantity, item.variantId ?? null)
                         }
@@ -189,11 +228,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 } catch {
                     // Silently fail — DB persistence is best-effort
                 }
-            }
-            persistToDB()
+            }, 300)
         } else {
-            // Guest: persist to localStorage
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items))
+        }
+
+        return () => {
+            if (persistTimerRef.current) clearTimeout(persistTimerRef.current)
         }
     }, [state.items, sessionUserId, state.isHydrating])
 

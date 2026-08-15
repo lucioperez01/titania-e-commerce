@@ -56,7 +56,12 @@ export default async function ProductPage({
                         </div>
 
                         <div className="border-t pt-2">
-                            <p className="text-xl font-primary font-light">Stock disponible: 2</p>
+                            <p className="text-xl font-primary font-light">
+                                {product.stock > 0
+                                    ? `Stock disponible: ${product.stock}`
+                                    : "Sin stock"
+                                }
+                            </p>
                         </div>
 
                         <div className="flex flex-col gap-3 mt-3">

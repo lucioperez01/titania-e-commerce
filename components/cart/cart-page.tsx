@@ -7,6 +7,8 @@ import CartItemList from "./cart-item-list"
 import { useCart } from "./cart-provider"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import AddToCartButton from "./add-to-cart-button"
+import { Truck, ShoppingBag } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface CartPageProps {
   products: ProductDTO[]
@@ -26,27 +28,71 @@ export default function CartPage({ products }: CartPageProps) {
     }, 0)
 
     const taxes = subtotal * TAX_RATE
-    const total = subtotal + subtotal === 0 ? 0 : SHIPPING_COST + taxes
+    const total = subtotal + (subtotal === 0 ? 0 : SHIPPING_COST + taxes)
     const remainingForFreeShipping = Math.max(FREE_SHIPPING_THRESHOLD - subtotal, 0)
+    const shippingProgress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)
+    const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
     const recommendedProducts = products
         .filter(product => !state.items.some(item => item.productId === product.id))
         .slice(0, 2)
+
+    if (state.isHydrating) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-purple-900/40 animate-pulse">
+                    <ShoppingBag className="h-12 w-12 text-purple-400" />
+                </div>
+                <p className="text-sm text-white/70">Cargando carrito...</p>
+            </div>
+        )
+    }
+
+    if (state.items.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-purple-900/40">
+                    <ShoppingBag className="h-12 w-12 text-purple-400" />
+                </div>
+                <h2 className="font-primary text-2xl font-semibold text-white">Tu carrito está vacío</h2>
+                <p className="mt-2 text-sm text-white/70">Agregá productos para continuar</p>
+                <Link
+                    href="/shop"
+                    className="mt-6 inline-flex items-center gap-2 rounded-md border border-purple-500/30 bg-purple-900/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-purple-800/60"
+                >
+                    <ShoppingBag className="h-4 w-4" />
+                    Seguir comprando
+                </Link>
+            </div>
+        )
+    }
 
     return (
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <section className="rounded-md border border-slate-200/10 p-5 min-h-128">
             <CartItemList products={products} />
 
-            <div className="mt-6 rounded-xl bg-linear-to-r from-indigo-500/20 to-purple-500/20  border border-slate-200/20 p-4 text-slate-300">
-                <p className="text-sm font-medium text-white">Envio gratis</p>
-                <p className="mt-1 text-sm  font-semibold text-indigo-200">
-                    {remainingForFreeShipping > 0
-                    ? `Agrega productos por AR$ ${remainingForFreeShipping.toFixed(2)} más y calificá para envío gratis.`
-                    : "Ya calificás para envío gratis."}
-                </p>
+            <div className="mt-6 rounded-xl border border-purple-500/20 bg-purple-900/30 p-4 text-slate-300">
+                <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-purple-400" />
+                    <p className="text-sm font-medium text-white">
+                        {isFreeShipping ? "¡Envío gratis!" : `Te faltan $${remainingForFreeShipping.toLocaleString("es-AR")} para envío gratis!`}
+                    </p>
+                </div>
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-700/50">
+                    <div
+                        className={cn(
+                            "h-full rounded-full transition-all duration-500",
+                            isFreeShipping ? "bg-purple-400" : "bg-purple-500"
+                        )}
+                        style={{ width: `${shippingProgress}%` }}
+                    />
+                </div>
+                {!isFreeShipping && (
+                    <p className="mt-2 text-xs text-white/60">
+                        Comprá por ${FREE_SHIPPING_THRESHOLD.toLocaleString("es-AR")} o más y el envío es gratis
+                    </p>
+                )}
             </div>
-
-            
 
             {recommendedProducts.length > 0 && (
             <div className="mt-10 border-t border-slate-200/30 pt-6">
@@ -137,9 +183,11 @@ export default function CartPage({ products }: CartPageProps) {
             </div>
 
             <div className="mt-6">
-                { subtotal === 0 ? undefined : <Button variant="secondary" className="w-full" size="lg">
-                    Comprar ahora
-                </Button>}
+                { subtotal === 0 ? undefined : <Link href="/checkout">
+                    <Button variant="secondary" className="w-full" size="lg">
+                        Comprar ahora
+                    </Button>
+                </Link>}
             </div>
         </aside>
         </div>
