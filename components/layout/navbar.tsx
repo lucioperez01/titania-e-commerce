@@ -1,6 +1,7 @@
 import Link from "next/link"
 import CartIcon from "@/components/cart/cart-icon"
 import SearchButton from "@/components/search/search-button"
+import WishlistIcon from "@/components/wishlist/wishlist-icon"
 import { auth, signOut } from "@/lib/auth"
 import { getNavbarCategories } from "@/application/use-cases/get-navbar-categories"
 import { User, LayoutDashboard } from "lucide-react"
@@ -72,10 +73,15 @@ export default async function Navbar() {
           )}
 
           <SearchButton />
+          <WishlistIcon />
           <CartIcon />
 
           {/* Mobile hamburger */}
-          <MobileMenu categories={categories ?? []} />
+          <MobileMenu
+            categories={categories ?? []}
+            isAdmin={session?.user?.role === "ADMIN"}
+            userEmail={session?.user?.email ?? undefined}
+          />
         </div>
       </div>
     </header>

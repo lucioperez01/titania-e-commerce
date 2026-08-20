@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { getProducts } from "@/application/use-cases/get-products";
 import { Suspense } from "react";
 import HomeSkeleton from "@/components/skeletons/home-skeleton";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Inicio",
+};
 
 async function HomeContent() {
     const products = await getProducts({ onlyOnline: true })

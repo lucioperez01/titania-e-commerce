@@ -1,12 +1,8 @@
 "use client"
 
-import { createContext, useContext, useEffect, useReducer, useRef, useCallback, ReactNode } from "react"
+import { createContext, useContext, useEffect, useReducer, useRef, ReactNode } from "react"
 import { useSession } from "next-auth/react"
 import { CartItemDTO } from "@/Interfaces/dto/cart.dto"
-import { getCart } from "@/domain/cart/use-cases/get-cart"
-import { addToCart } from "@/domain/cart/use-cases/add-to-cart"
-import { mergeCart } from "@/domain/cart/use-cases/merge-cart"
-import { PrismaCartRepository } from "@/infrastructure/repositories/PrismaCartRepository"
 
 const STORAGE_KEY = "titania-cart"
 const ANON_CART_STORAGE_KEY = "titania-anon-cart"
@@ -123,9 +119,6 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null)
 
-// Cart repository instance for DB operations
-const cartRepository = new PrismaCartRepository()
-
 export function CartProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(cartReducer, { items: [], isHydrating: true })
     const { data: session } = useSession()
@@ -135,11 +128,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (typeof window === "undefined") return
         const raw = window.localStorage.getItem(STORAGE_KEY)
+        console.log(`Cart initial load: localStorage raw = ${raw}`)
         if (raw) {
             try {
                 const parsed = JSON.parse(raw) as CartItemDTO[]
+                console.log(`Cart loaded from localStorage: ${parsed.length} items`)
                 dispatch({ type: "HYDRATE", items: parsed })
-            } catch {
+            } catch (err) {
+                console.warn(`Cart localStorage parse failed:`, err)
                 window.localStorage.removeItem(STORAGE_KEY)
             }
         }
@@ -170,14 +166,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 if (localItems.length > 0) {
                     let mergeSucceeded = false
                     try {
-                        await mergeCart(
-                            cartRepository,
-                            uid,
-                            localItems.map(i => ({ productId: i.productId, quantity: i.quantity, variantId: i.variantId ?? null }))
-                        )
-                        mergeSucceeded = true
+                        const res = await fetch("/api/cart", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                action: "MERGE",
+                                items: localItems.map(i => ({
+                                    productId: i.productId,
+                                    quantity: i.quantity,
+                                    variantId: i.variantId ?? null,
+                                })),
+                            }),
+                        })
+                        mergeSucceeded = res.ok
                     } catch {
-                        // Merge failed — keep localStorage items as fallback
                     }
                     if (mergeSucceeded) {
                         window.localStorage.removeItem(STORAGE_KEY)
@@ -185,17 +187,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 }
 
                 try {
-                    const dbCart = await getCart(cartRepository, uid)
-                    if (dbCart.items.length > 0) {
-                        dispatch({ type: "HYDRATE", items: dbCart.items })
-                    } else if (localItems.length > 0) {
-                        // DB is empty but we had localStorage items — restore them
-                        dispatch({ type: "HYDRATE", items: localItems })
+                    const res = await fetch("/api/cart")
+                    if (res.ok) {
+                        const data = await res.json()
+                        console.log(`Cart DB hydration: data.items.length = ${data.items.length}, localItems.length = ${localItems.length}`)
+                        if (data.items && data.items.length > 0) {
+                            dispatch({ type: "HYDRATE", items: data.items })
+                            console.log(`Cart hydrated from DB: ${data.items.length} items`)
+                        } else if (localItems.length > 0) {
+                            dispatch({ type: "HYDRATE", items: localItems })
+                            console.log(`Cart restored from localStorage: ${localItems.length} items`)
+                        } else {
+                            console.log(`Cart is empty (no DB, no localStorage)`)
+                        }
                     }
-                } catch {
-                    // DB read failed — restore from localStorage if available
+                } catch (err) {
+                    console.warn("Cart DB read failed:", err)
                     if (localItems.length > 0) {
                         dispatch({ type: "HYDRATE", items: localItems })
+                        console.log(`Cart restored from localStorage after DB error: ${localItems.length} items`)
                     }
                 }
             } finally {
@@ -218,15 +228,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
             if (persistTimerRef.current) clearTimeout(persistTimerRef.current)
             persistTimerRef.current = setTimeout(async () => {
                 try {
-                    const dbCart = await getCart(cartRepository, sessionUserId)
-                    const cartId = dbCart.id
-                    if (cartId > 0 && state.items.length > 0) {
-                        for (const item of state.items) {
-                            await addToCart(cartRepository, cartId, item.productId, item.quantity, item.variantId ?? null)
-                        }
-                    }
+                    await fetch("/api/cart", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            action: "SYNC",
+                            items: state.items.map(item => ({
+                                productId: item.productId,
+                                quantity: item.quantity,
+                                variantId: item.variantId ?? null,
+                            })),
+                        }),
+                    })
                 } catch {
-                    // Silently fail — DB persistence is best-effort
                 }
             }, 300)
         } else {

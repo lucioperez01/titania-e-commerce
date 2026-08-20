@@ -9,6 +9,10 @@ export default function LoginPage() {
   const [state, formAction] = useActionState(loginAction, null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  if (state?.success) {
+    window.location.href = "/";
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent">
       <div className="w-sm max-w-lg bg-white p-8 rounded-lg shadow-md">

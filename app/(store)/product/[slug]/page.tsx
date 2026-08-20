@@ -2,11 +2,19 @@ import { Rating } from "@/components/product/rating"
 import Price from "@/components/product/price"
 import Link from "next/link"
 import AddToCartButton from "@/components/cart/add-to-cart-button"
+import WishlistButton from "@/components/wishlist/wishlist-button"
 import { Button } from "@/components/ui/button"
 import { LucideCheck } from "lucide-react"
 import { LucideTruck } from "lucide-react"
 import ProductImageCarousel from "@/components/product/productImageCarousel"
 import { getProducts } from "@/application/use-cases/get-products"
+import type { Metadata } from "next"
+
+export function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Metadata {
+    return {
+        title: "Producto",
+    };
+}
 
 
 export default async function ProductPage({
@@ -39,7 +47,10 @@ export default async function ProductPage({
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold truncate w-full ">{product.name}</h2>
+                <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-2xl font-bold truncate">{product.name}</h2>
+                    <WishlistButton productId={product.id} />
+                </div>
 
                 <div className="lg:flex lg:gap-5">
 

@@ -48,7 +48,7 @@ export default function DashboardLayout({
                 </nav>
                 <Link
                     href="/shop"
-                    className="hidden md:flex items-center gap-3 px-4 py-3 mt-auto rounded-lg text-slate-300 hover:bg-purple-600/20 hover:text-white transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 mt-4 md:mt-auto rounded-lg text-slate-300 hover:bg-purple-600/20 hover:text-white transition-colors"
                 >
                     <Store className="w-5 h-5" />
                     <span>Ir a la tienda</span>

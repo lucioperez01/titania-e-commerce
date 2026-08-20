@@ -3,6 +3,13 @@ import { getProducts } from "@/application/use-cases/get-products"
 import { searchProducts } from "@/application/use-cases/search-products"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import { PrismaCategoriesRepository } from "@/infrastructure/repositories/PrismaCategoryRepository"
+import type { Metadata } from "next"
+
+export function generateMetadata({ searchParams }: { searchParams: Promise<{ category?: string; search?: string }> }): Metadata {
+    return {
+        title: "Catálogo",
+    };
+}
 
 export default async function Shop({ searchParams }: { searchParams: Promise<{ category?: string; search?: string }> }) {
     const { category, search } = await searchParams
