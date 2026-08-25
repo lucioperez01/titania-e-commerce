@@ -244,7 +244,7 @@ describe("product use cases", () => {
 
             await getProducts()
 
-            expect(mockFindAllProducts).toHaveBeenCalledWith()
+            expect(mockFindAllProducts).toHaveBeenCalledWith({ categoryId: undefined })
         })
     })
 

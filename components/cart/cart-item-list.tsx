@@ -13,6 +13,10 @@ interface CartItemListProps {
 export default function CartItemList({ products }: CartItemListProps) {
     const { state, dispatch } = useCart()
     const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0)
+    const grandTotal = state.items.reduce((sum, item) => {
+        const product = products.find(p => p.id === item.productId)
+        return sum + (product ? product.price * item.quantity : 0)
+    }, 0)
 
     return (
         <div className="flex flex-col gap-6">
@@ -100,6 +104,12 @@ export default function CartItemList({ products }: CartItemListProps) {
                         )
                     })}
                 </ul>
+            )}
+
+            {state.items.length > 0 && (
+                <div className="flex justify-end border-t border-slate-200/30 pt-4" data-testid="cart-total">
+                    <p className="text-lg font-semibold text-white">Total: ${grandTotal.toFixed(2)}</p>
+                </div>
             )}
         </div>
     )

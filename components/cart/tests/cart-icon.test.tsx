@@ -3,6 +3,7 @@
 import "@testing-library/jest-dom"
 import { render, screen } from "@testing-library/react"
 import { CartProvider } from "@/components/cart/cart-provider"
+import { CartDrawerProvider } from "@/components/cart/cart-drawer-context"
 import CartIcon from "@/components/cart/cart-icon"
 
 const STORAGE_KEY = "titania-cart"
@@ -12,13 +13,15 @@ describe("CartIcon", () => {
         window.localStorage.clear()
     })
 
-    it("renders a link to /cart", () => {
+    it("renders a button to open the cart drawer", () => {
         render(
             <CartProvider>
-                <CartIcon />
+                <CartDrawerProvider>
+                    <CartIcon />
+                </CartDrawerProvider>
             </CartProvider>
         )
-        expect(screen.getByRole("link")).toHaveAttribute("href", "/cart")
+        expect(screen.getByRole("button", { name: /abrir carrito/i })).toBeInTheDocument()
     })
 
     it("shows the total item count in a badge", () => {
@@ -28,7 +31,9 @@ describe("CartIcon", () => {
         )
         render(
             <CartProvider>
-                <CartIcon />
+                <CartDrawerProvider>
+                    <CartIcon />
+                </CartDrawerProvider>
             </CartProvider>
         )
         expect(screen.getByText("3")).toBeInTheDocument()
@@ -37,7 +42,9 @@ describe("CartIcon", () => {
     it("hides the badge when the cart is empty", () => {
         render(
             <CartProvider>
-                <CartIcon />
+                <CartDrawerProvider>
+                    <CartIcon />
+                </CartDrawerProvider>
             </CartProvider>
         )
         expect(screen.queryByText("0")).not.toBeInTheDocument()
