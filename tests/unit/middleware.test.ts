@@ -9,12 +9,12 @@ jest.mock("next-auth/jwt", () => ({
 const originalEnv = process.env;
 
 describe("middleware", () => {
-  let middleware: typeof import("../../middleware");
+  let middleware: typeof import("../../proxy");
 
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...originalEnv, NEXTAUTH_SECRET: "test-secret" };
-    middleware = await import("../../middleware");
+    middleware = await import("../../proxy");
   });
 
   afterEach(() => {
