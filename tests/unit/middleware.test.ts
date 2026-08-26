@@ -33,7 +33,7 @@ describe("middleware", () => {
     const { getToken } = require("next-auth/jwt");
     getToken.mockResolvedValue(null);
 
-    const response = await middleware.middleware(makeRequest("/shop"));
+    const response = await middleware.proxy(makeRequest("/shop"));
 
     expect(response.status).toBe(200); // NextResponse.next() returns 200
   });
@@ -42,7 +42,7 @@ describe("middleware", () => {
     const { getToken } = require("next-auth/jwt");
     getToken.mockResolvedValue(null);
 
-    const response = await middleware.middleware(makeRequest("/dashboard"));
+    const response = await middleware.proxy(makeRequest("/dashboard"));
 
     expect(response.headers.get("location")).toContain("/login");
   });
@@ -51,7 +51,7 @@ describe("middleware", () => {
     const { getToken } = require("next-auth/jwt");
     getToken.mockResolvedValue({ userId: "1", role: "USER" });
 
-    const response = await middleware.middleware(makeRequest("/dashboard"));
+    const response = await middleware.proxy(makeRequest("/dashboard"));
 
     expect(response.headers.get("location")).toContain("/");
   });
@@ -60,7 +60,7 @@ describe("middleware", () => {
     const { getToken } = require("next-auth/jwt");
     getToken.mockResolvedValue({ userId: "1", role: "ADMIN" });
 
-    const response = await middleware.middleware(makeRequest("/dashboard"));
+    const response = await middleware.proxy(makeRequest("/dashboard"));
 
     expect(response.status).toBe(200); // NextResponse.next()
   });
@@ -69,7 +69,7 @@ describe("middleware", () => {
     const { getToken } = require("next-auth/jwt");
     getToken.mockResolvedValue(null);
 
-    const response = await middleware.middleware(makeRequest("/dashboard/products"));
+    const response = await middleware.proxy(makeRequest("/dashboard/products"));
 
     expect(response.headers.get("location")).toContain("/login");
   });
