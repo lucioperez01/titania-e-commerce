@@ -182,6 +182,7 @@ model Order {
   shippingCost      Decimal?    @db.Decimal(10,2)
   paymentProvider   PaymentProvider?
   paymentId         String?
+  preferenceId      String?
   paidAt            DateTime?
   items             OrderItem[]
   shippingAddressId Int
@@ -190,9 +191,11 @@ model Order {
   deletedAt         DateTime?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+  transitions   OrderStatusTransition[]
   @@index([userId])
-@@index([status])
-@@index([email])
+  @@index([status])
+  @@index([email])
+  @@index([preferenceId])
 }
 
 model Address {
@@ -401,4 +404,17 @@ model WebhookLog {
   isDeleted  Boolean  @default(false)
   deletedAt  DateTime?
   createdAt  DateTime @default(now())
+}
+
+model OrderStatusTransition {
+  id             Int         @id @default(autoincrement())
+  orderId        Int
+  order          Order       @relation(fields: [orderId], references: [id])
+  previousStatus OrderStatus
+  newStatus      OrderStatus
+  trigger        String
+  reason         String      @default("")
+  createdAt      DateTime    @default(now())
+
+  @@index([orderId])
 }
