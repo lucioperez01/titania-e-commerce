@@ -67,7 +67,7 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                     </div>
                 ) : (
                     <div className="rounded-xl border border-purple-400/20 bg-neutral-900/20 backdrop-blur-sm shadow-xl overflow-hidden">
-                        <div className="overflow-x-auto">
+                        <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-purple-400/20">
@@ -119,6 +119,51 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div className="lg:hidden divide-y divide-purple-400/10">
+                            {categories.map((c) => (
+                                <div key={c.id} className={`p-4 space-y-3 ${c.isDeleted ? 'opacity-50' : ''}`}>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium text-white">{c.name}</p>
+                                        {c.isDeleted ? (
+                                            <span className="inline-flex items-center rounded-full bg-red-500/20 px-2 py-1 text-xs font-medium text-red-400">
+                                                Eliminada
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-400">
+                                                Activa
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div>
+                                            <p className="text-xs text-slate-300">Slug</p>
+                                            <p className="text-sm font-mono text-slate-300">{c.slug}</p>
+                                        </div>
+                                        {c.description && (
+                                            <div>
+                                                <p className="text-xs text-slate-300">Descripción</p>
+                                                <p className="text-sm text-slate-300 line-clamp-2">{c.description}</p>
+                                            </div>
+                                        )}
+                                        <div>
+                                            <p className="text-xs text-slate-300">Navbar</p>
+                                            <p className={`text-sm font-medium ${c.showInNavbar ? 'text-emerald-400' : 'text-slate-300'}`}>
+                                                {c.showInNavbar ? 'Sí' : 'No'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(c)}>
+                                            Editar
+                                        </Button>
+                                        <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleDelete(c.id)} disabled={c.isDeleted}>
+                                            Eliminar
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}

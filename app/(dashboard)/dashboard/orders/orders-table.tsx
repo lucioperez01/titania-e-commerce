@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ChevronRight, ChevronDown, Package, MapPin, CreditCard } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { OrderStatus } from "@prisma/client"
 
 interface Order {
@@ -41,37 +42,78 @@ export function OrdersTable({ orders, statusLabels, statusColors }: OrdersTableP
     }
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full">
-                <thead>
-                    <tr className="border-b border-purple-400/20 text-left">
-                        <th className="pb-3 w-8"></th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">ID</th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Total</th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Items</th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Estado</th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Fecha</th>
-                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider"></th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-purple-400/10">
-                    {orders.map((order) => {
-                        const isExpanded = expandedId === order.id
-                        return (
-                            <OrderRow
-                                key={order.id}
-                                order={order}
-                                isExpanded={isExpanded}
-                                onToggle={() => toggleRow(order.id)}
-                                statusLabels={statusLabels}
-                                statusColors={statusColors}
-                            />
-                        )
-                    })}
-                </tbody>
-            </table>
-        </div>
+        <>
+            <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                    <thead>
+                        <tr className="border-b border-purple-400/20 text-left">
+                            <th className="pb-3 w-8"></th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">ID</th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Total</th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Items</th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Estado</th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Fecha</th>
+                            <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-purple-400/10">
+                        {orders.map((order) => {
+                            const isExpanded = expandedId === order.id
+                            return (
+                                <OrderRow
+                                    key={order.id}
+                                    order={order}
+                                    isExpanded={isExpanded}
+                                    onToggle={() => toggleRow(order.id)}
+                                    statusLabels={statusLabels}
+                                    statusColors={statusColors}
+                                />
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="lg:hidden divide-y divide-purple-400/10">
+                {orders.map((order) => (
+                    <div key={order.id} className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm font-mono font-medium text-white">#{order.id}</p>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[order.status]}`}>
+                                {statusLabels[order.status]}
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <div>
+                                <p className="text-xs text-slate-300">Cliente</p>
+                                <p className="text-sm font-medium text-white">{order.fullName}</p>
+                                <p className="text-xs text-slate-300">{order.email}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-xs text-slate-300">Total</p>
+                                    <p className="text-sm font-semibold text-white">${order.total.toLocaleString("es-AR")}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-300">Items</p>
+                                    <p className="text-sm font-medium text-white">{order.itemCount} productos</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-300">Fecha</p>
+                                <p className="text-sm text-slate-300">{order.createdAt.toLocaleDateString("es-AR")}</p>
+                            </div>
+                        </div>
+                        <Link href={`/dashboard/orders/${order.id}`}>
+                            <Button variant="outline" size="sm" className="w-full">
+                                Ver detalle
+                            </Button>
+                        </Link>
+                    </div>
+                ))}
+            </div>
+        </>
     )
 }
 
