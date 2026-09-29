@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { PrismaCartRepository } from "@/infrastructure/repositories/PrismaCartRepository";
 import { CreateReservedOrder } from "@/domain/order/use-cases/create-reserved-order";
 import { redirect } from "next/navigation";
+import { sendOrderEmailAsync } from "@/lib/email/send-order-emails";
 
 export interface ConsentResult {
   success: boolean;
@@ -23,7 +24,59 @@ export interface CheckoutRedirectResult {
   error?: string;
 }
 
+export interface OrderSummary {
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  itemCount: number;
+}
+
 const IDEMPOTENCY_WINDOW_MS = 5000; // 5 seconds
+
+export async function getOrderSummary(): Promise<OrderSummary> {
+  try {
+    const { auth } = await import("@/lib/auth");
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return { subtotal: 0, shippingCost: 0, total: 0, itemCount: 0 };
+    }
+
+    const userId = Number(session.user.id);
+    const cartRepository = new PrismaCartRepository();
+    const cart = await cartRepository.findByUserId(userId);
+
+    if (!cart || cart.items.length === 0) {
+      return { subtotal: 0, shippingCost: 0, total: 0, itemCount: 0 };
+    }
+
+    const productIds = cart.items.map(i => i.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      include: { variants: true },
+    });
+
+    let subtotal = 0;
+    for (const item of cart.items) {
+      const product = products.find(p => p.id === item.productId);
+      if (!product) continue;
+
+      const price = item.variantId
+        ? product.variants.find(v => v.id === item.variantId)?.price ?? product.price
+        : product.price;
+      subtotal += Number(price) * item.quantity;
+    }
+
+    const shippingCost = subtotal >= 50000 ? 0 : 14000;
+    const total = subtotal + shippingCost;
+    const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
+    return { subtotal, shippingCost, total, itemCount };
+  } catch (error) {
+    console.error("getOrderSummary error:", error);
+    return { subtotal: 0, shippingCost: 0, total: 0, itemCount: 0 };
+  }
+}
 
 export async function saveConsent(mailing: boolean): Promise<ConsentResult> {
   try {
@@ -255,6 +308,28 @@ export async function checkoutWithMercadoPago(formData: {
     const redirectUrl = isSandbox && result.sandboxInitPoint
       ? result.sandboxInitPoint
       : result.initPoint;
+
+    const orderWithItems = await prisma.order.findUnique({
+      where: { id: result.orderId },
+      include: {
+        items: { include: { product: { select: { name: true } } } },
+      },
+    });
+
+    if (orderWithItems) {
+      sendOrderEmailAsync("order.created", {
+        orderNumber: orderWithItems.id,
+        customerName: orderWithItems.fullName,
+        customerEmail: orderWithItems.email,
+        items: orderWithItems.items.map((item) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+        })),
+        total: Number(orderWithItems.total),
+        paymentLink: redirectUrl,
+      });
+    }
 
     return {
       success: true,

@@ -13,12 +13,41 @@ import {
     TrendingUp,
     Store
 } from "lucide-react";
+import { getDashboardMetricsAction, getRecentOrdersAction } from "./orders/actions";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+    const [metrics, recentOrders] = await Promise.all([
+        getDashboardMetricsAction(),
+        getRecentOrdersAction(10),
+    ]);
+
+    const statusLabels: Record<string, string> = {
+        PENDING: "Pendiente",
+        RESERVED: "Reservado",
+        PAID: "Pagado",
+        SHIPPED: "Enviado",
+        DELIVERED: "Entregado",
+        CANCELLED: "Cancelado",
+        EXPIRED: "Expirado",
+        RETURNED: "Devuelto",
+        REFUNDED: "Reembolsado",
+    };
+
+    const statusColors: Record<string, string> = {
+        PENDING: "text-yellow-400",
+        RESERVED: "text-blue-400",
+        PAID: "text-emerald-400",
+        SHIPPED: "text-purple-400",
+        DELIVERED: "text-green-400",
+        CANCELLED: "text-red-400",
+        EXPIRED: "text-gray-400",
+        RETURNED: "text-orange-400",
+        REFUNDED: "text-pink-400",
+    };
+
     return (
         <div className="flex flex-col justify-center items-center space-y-5 md:p-10 text-white animate-in fade-in duration-500 w-full">
 
-            {/* Header Section */}
             <div className="pt-6 flex items-center justify-center">
                 <div>
                     <h2 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent text-center">
@@ -30,84 +59,83 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Top Stats Grid */}
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 w-[85%] max-w-6xl">
-                {/* <IncomeGraph /> */}
                 <StatCard
                     title="Ingresos totales"
-                    value="$455,231.89"
+                    value={`$${metrics.totalSold.toLocaleString("es-AR")}`}
                     icon={<DollarSign className="w-4 h-4 text-emerald-400" />}
-                    trend="+10.1% del mes pasado"
+                    trend={`${metrics.totalOrders} órdenes pagadas`}
                     trendUp={true}
                 />
                 <StatCard
-                    title="Ventas"
-                    value="+3"
+                    title="Ticket promedio"
+                    value={`$${Math.round(metrics.avgTicket).toLocaleString("es-AR")}`}
                     icon={<CreditCard className="w-4 h-4 text-cyan-400" />}
-                    trend="+35% del mes pasado"
+                    trend="Promedio por venta"
                     trendUp={true}
                 />
                 <StatCard
                     title="Pedidos activos"
-                    value="+5"
+                    value={`${metrics.totalOrders}`}
                     icon={<Activity className="w-4 h-4 text-indigo-400" />}
-                    trend="+19% del mes pasado"
+                    trend="Total de ventas"
                     trendUp={true}
                 />
                 <StatCard
-                    title="Clientes activos"
-                    value="+573"
+                    title="Clientes recurrentes"
+                    value={`${metrics.repeatCustomers}`}
                     icon={<Users className="w-4 h-4 text-purple-400" />}
-                    trend="+201 del mes pasado"
+                    trend="Compraron más de 1 vez"
                     trendUp={true}
                 />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 justify-center items-center">
-                {/* Main Content Area (Left 4 cols) */}
                 <div className="col-span-4 rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-purple-800/30">
                         <div className="space-y-1">
                             <h3 className="font-semibold leading-none tracking-tight text-lg">Ordenes recientes</h3>
-                            <p className="text-md text-slate-200">Hiciste <span className="text-purple-400 font-semibold">10 ventas</span> este mes.</p>
+                            <p className="text-md text-slate-200">Últimos {recentOrders.length} pedidos.</p>
                         </div>
-                        <Button variant="outline" className="font-secondary font-extrabold text-slate-600 border-neutral-700 hover:cursor-pointer gap-2">
-                            Ver todas <ArrowUpRight className="w-4 h-4" />
-                        </Button>
+                        <Link href="/dashboard/orders">
+                            <Button variant="outline" className="font-secondary font-extrabold text-slate-600 border-neutral-700 hover:cursor-pointer gap-2">
+                                Ver todas <ArrowUpRight className="w-4 h-4" />
+                            </Button>
+                        </Link>
                     </div>
 
-                    <div className=" mt-6 space-y-6">
-                        {[
-                            { name: "Liam Johnson", email: "liam@example.com", amount: "+$1,999.00", status: "Completed" },
-                            { name: "Olivia Smith", email: "olivia@example.com", amount: "+$39.00", status: "Processing" },
-                            { name: "Noah Williams", email: "noah@example.com", amount: "+$299.00", status: "Completed" },
-                            { name: "Emma Brown", email: "emma@example.com", amount: "+$99.00", status: "Completed" },
-                            { name: "William Jones", email: "will@example.com", amount: "+$150.00", status: "Processing" },
-                        ].map((order, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-purple-500/30 transition-colors group cursor-pointer">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 relative flex items-center justify-center rounded-full bg-neutral-800 border border-slate-700 overflow-hidden shadow-inner">
-                                        <span className="font-semibold text-slate-300">{order.name[0]}</span>
+                    <div className="mt-6 space-y-6">
+                        {recentOrders.length === 0 ? (
+                            <p className="text-center text-slate-400 py-8">No hay pedidos todavía</p>
+                        ) : (
+                            recentOrders.map((order) => (
+                                <Link
+                                    key={order.id}
+                                    href={`/dashboard/orders/${order.id}`}
+                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-purple-500/30 transition-colors group cursor-pointer"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-10 w-10 relative flex items-center justify-center rounded-full bg-neutral-800 border border-slate-700 overflow-hidden shadow-inner">
+                                            <span className="font-semibold text-slate-300">{order.fullName[0]}</span>
+                                        </div>
+                                        <div className="space-y-1 text-left">
+                                            <p className="text-sm font-medium leading-none group-hover:text-purple-400 transition-colors">{order.fullName}</p>
+                                            <p className="text-xs text-slate-300">{order.email}</p>
+                                        </div>
                                     </div>
-                                    <div className="space-y-1 text-left">
-                                        <p className="text-sm font-medium leading-none group-hover:text-purple-400 transition-colors">{order.name}</p>
-                                        <p className="text-xs text-slate-300">{order.email}</p>
+                                    <div className="text-right">
+                                        <div className="font-medium">${Number(order.total).toLocaleString("es-AR")}</div>
+                                        <div className={`text-xs ${statusColors[order.status]}`}>
+                                            {statusLabels[order.status]}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-medium">{order.amount}</div>
-                                    <div className={`text-xs ${order.status === 'Completed' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                        {order.status}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                                </Link>
+                            ))
+                        )}
                     </div>
                 </div>
 
-                {/* Right Side Panel (Right 3 cols) */}
                 <div className="grid col-span-4 md:col-span-4 lg:col-span-3 gap-4 justify-center items-center">
-                    {/* Inventory Actions Card */}
                     <div className="rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl">
                         <div className="p-2 pb-4">
                             <h3 className="font-semibold leading-none tracking-tight text-lg">Administrador de Inventario</h3>
@@ -135,31 +163,56 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Top Products Card */}
                     <div className="rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl mb-5">
                         <div className="space-y-1 pb-4 border-b border-purple-800/30">
                             <h3 className="font-semibold leading-none tracking-tight text-lg">Top Products</h3>
                             <p className="text-sm text-slate-200">Productos más vendidos.</p>
                         </div>
                         <div className="mt-4 space-y-4">
-                            {[
-                                { name: "Lenter rayban", sales: "1,234", icon: <ShoppingCart className="w-4 h-4 text-cyan-400" /> },
-                                { name: "Cartera chanel", sales: "856", icon: <ShoppingCart className="w-4 h-4 text-indigo-400" /> },
-                                { name: "Zapatos gucci", sales: "432", icon: <ShoppingCart className="w-4 h-4 text-emerald-400" /> },
-                            ].map((product, i) => (
-                                <div key={i} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-neutral-800/40 rounded-lg transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-md bg-neutral-800 border border-neutral-700 shadow-sm">
-                                            <Package className="w-4 h-4 text-neutral-300 group-hover:text-indigo-400 transition-colors" />
+                            {metrics.bestSellers.length === 0 ? (
+                                <p className="text-center text-slate-400 py-4 text-sm">Sin ventas todavía</p>
+                            ) : (
+                                metrics.bestSellers.map((product, i) => (
+                                    <div key={product.productId} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-neutral-800/40 rounded-lg transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-md bg-neutral-800 border border-neutral-700 shadow-sm">
+                                                <Package className="w-4 h-4 text-neutral-300 group-hover:text-indigo-400 transition-colors" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">{product.productName}</p>
+                                                <p className="text-xs text-slate-200">{product.quantity} ventas — ${product.revenue.toLocaleString("es-AR")}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium">{product.name}</p>
-                                            <p className="text-xs text-slate-200">{product.sales} ventas</p>
+                                        <TrendingUp className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl mb-5">
+                        <div className="space-y-1 pb-4 border-b border-purple-800/30">
+                            <h3 className="font-semibold leading-none tracking-tight text-lg">Worst Sellers</h3>
+                            <p className="text-sm text-slate-200">Productos con menos ventas.</p>
+                        </div>
+                        <div className="mt-4 space-y-4">
+                            {metrics.worstSellers.length === 0 ? (
+                                <p className="text-center text-slate-400 py-4 text-sm">Sin datos todavía</p>
+                            ) : (
+                                metrics.worstSellers.map((product) => (
+                                    <div key={product.productId} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-neutral-800/40 rounded-lg transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-md bg-neutral-800 border border-neutral-700 shadow-sm">
+                                                <Package className="w-4 h-4 text-neutral-300 group-hover:text-rose-400 transition-colors" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">{product.productName}</p>
+                                                <p className="text-xs text-slate-200">{product.quantity} ventas — ${product.revenue.toLocaleString("es-AR")}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <TrendingUp className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
@@ -168,7 +221,6 @@ export default function DashboardPage() {
     );
 }
 
-// Subcomponents for the Dashboard Page to keep it modular
 function StatCard({ title, value, icon, trend, trendUp }: { title: string, value: string, icon: React.ReactNode, trend: string, trendUp: boolean }) {
     return (
         <div className="rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm shadow-xl p-6 flex flex-col justify-between hover:bg-neutral-800/60 transition-all cursor-default">
