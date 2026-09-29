@@ -1,6 +1,8 @@
 import { getOrdersAction, getOrderStatusCountsAction } from "./actions";
 import Link from "next/link";
 import { OrderStatus } from "@prisma/client";
+import { Package, Search } from "lucide-react";
+import { EmptyState } from "@/components/dashboard/empty-state";
 
 interface OrdersPageProps {
   searchParams: Promise<{
@@ -63,18 +65,18 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           <Link
             key={s}
             href={`/dashboard/orders?status=${s}`}
-            className="rounded-xl border border-purple-400/30 bg-neutral-900/20 backdrop-blur-sm p-4 shadow-xl hover:bg-neutral-800/60 transition-all"
+            className="rounded-xl border border-purple-400/20 bg-neutral-900/20 backdrop-blur-sm p-4 shadow-xl hover:bg-neutral-800/40 transition-all"
           >
-            <div className="text-sm text-slate-300">{statusLabels[s]}</div>
-            <div className="text-2xl font-bold mt-1">{count}</div>
+            <div className="text-sm text-slate-300 font-medium">{statusLabels[s]}</div>
+            <div className="text-2xl font-bold mt-1 text-white">{count}</div>
           </Link>
         ))}
       </div>
 
-      <div className="rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl">
+      <div className="rounded-xl border border-purple-400/20 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl">
         <form className="flex flex-wrap gap-4 mb-6" method="GET" action="/dashboard/orders">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400">Estado</label>
+            <label className="text-xs text-slate-300 font-medium">Estado</label>
             <select
               name="status"
               defaultValue={status ?? ""}
@@ -88,7 +90,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400">Email</label>
+            <label className="text-xs text-slate-300 font-medium">Email</label>
             <input
               type="text"
               name="email"
@@ -99,7 +101,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400">Desde</label>
+            <label className="text-xs text-slate-300 font-medium">Desde</label>
             <input
               type="date"
               name="dateFrom"
@@ -109,7 +111,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400">Hasta</label>
+            <label className="text-xs text-slate-300 font-medium">Hasta</label>
             <input
               type="date"
               name="dateTo"
@@ -141,33 +143,47 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-purple-400/30 text-left">
-                <th className="pb-3 text-xs font-medium text-slate-400">ID</th>
-                <th className="pb-3 text-xs font-medium text-slate-400">Cliente</th>
-                <th className="pb-3 text-xs font-medium text-slate-400">Email</th>
-                <th className="pb-3 text-xs font-medium text-slate-400">Total</th>
-                <th className="pb-3 text-xs font-medium text-slate-400">Items</th>
-                <th className="pb-3 text-xs font-medium text-slate-400">Estado</th>
-                <th className="pb-3 text-xs font-medium text-slate-400">Fecha</th>
-                <th className="pb-3 text-xs font-medium text-slate-400"></th>
+                <th className="pb-3 text-xs font-medium text-slate-300">ID</th>
+                <th className="pb-3 text-xs font-medium text-slate-300">Cliente</th>
+                <th className="pb-3 text-xs font-medium text-slate-300">Email</th>
+                <th className="pb-3 text-xs font-medium text-slate-300">Total</th>
+                <th className="pb-3 text-xs font-medium text-slate-300">Items</th>
+                <th className="pb-3 text-xs font-medium text-slate-300">Estado</th>
+                <th className="pb-3 text-xs font-medium text-slate-300">Fecha</th>
+                <th className="pb-3 text-xs font-medium text-slate-300"></th>
               </tr>
             </thead>
             <tbody>
               {ordersResult.orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
-                    No se encontraron pedidos
+                  <td colSpan={8} className="py-4">
+                    {status || email || dateFrom || dateTo ? (
+                      <EmptyState
+                        icon={Search}
+                        title="No se encontraron pedidos"
+                        description="No hay pedidos que coincidan con los filtros seleccionados"
+                        action={{ label: "Limpiar filtros", href: "/dashboard/orders" }}
+                      />
+                    ) : (
+                      <EmptyState
+                        icon={Package}
+                        title="No hay pedidos todavía"
+                        description="Cuando recibas pedidos, aparecerán aquí con todos los detalles"
+                        action={{ label: "Ver productos", href: "/dashboard/products" }}
+                      />
+                    )}
                   </td>
                 </tr>
               ) : (
                 ordersResult.orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="border-b border-purple-400/10 hover:bg-purple-500/10 transition-colors"
+                    className="border-b border-purple-400/10 hover:bg-neutral-800/40 transition-colors"
                   >
-                    <td className="py-3 text-sm font-mono">#{order.id}</td>
-                    <td className="py-3 text-sm">{order.fullName}</td>
+                    <td className="py-3 text-sm font-mono text-white">#{order.id}</td>
+                    <td className="py-3 text-sm text-white">{order.fullName}</td>
                     <td className="py-3 text-sm text-slate-300">{order.email}</td>
-                    <td className="py-3 text-sm font-medium">
+                    <td className="py-3 text-sm font-medium text-white">
                       ${order.total.toLocaleString("es-AR")}
                     </td>
                     <td className="py-3 text-sm text-slate-300">{order.itemCount}</td>
