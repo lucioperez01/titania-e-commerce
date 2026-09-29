@@ -17,7 +17,7 @@ export default function DashboardLayout({
             <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
             <div className="flex-1 md:ml-64">
-                <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-purple-400/20 bg-transparent px-6 backdrop-blur-xl md:px-8">
+                <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-purple-400/20 bg-transparent px-6 backdrop-blur-xl md:px-8 md:hidden">
                     <button
                         onClick={() => setMobileOpen(true)}
                         className="md:hidden text-slate-300 hover:text-white transition-colors"
