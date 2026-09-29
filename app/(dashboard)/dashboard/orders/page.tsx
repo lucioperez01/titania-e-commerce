@@ -59,7 +59,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-white">Pedidos</h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-sm text-slate-300 mt-1">
                         Gestión y seguimiento de órdenes
                     </p>
                 </div>
@@ -163,7 +163,7 @@ function StatusTab({
             className={`flex items-center gap-2 whitespace-nowrap px-4 pb-3 text-sm font-medium transition-colors border-b-2 ${
                 active
                     ? "text-white border-purple-400"
-                    : "text-slate-400 border-transparent hover:text-slate-300"
+                    : "text-slate-300 border-transparent hover:text-slate-300"
             }`}
         >
             {label}
@@ -171,7 +171,7 @@ function StatusTab({
                 className={`rounded-full px-2 py-0.5 text-xs ${
                     active
                         ? "bg-purple-600/20 text-purple-300"
-                        : "bg-neutral-800 text-slate-400"
+                        : "bg-neutral-800 text-slate-300"
                 }`}
             >
                 {count}

@@ -33,7 +33,7 @@ export function OrdersTable({ orders, statusLabels, statusColors }: OrdersTableP
             <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Package className="h-12 w-12 text-slate-600 mb-4" />
                 <h3 className="text-lg font-semibold text-white">No hay pedidos</h3>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-slate-300 mt-1">
                     Los pedidos aparecerán aquí cuando se realicen
                 </p>
             </div>
@@ -46,13 +46,13 @@ export function OrdersTable({ orders, statusLabels, statusColors }: OrdersTableP
                 <thead>
                     <tr className="border-b border-purple-400/20 text-left">
                         <th className="pb-3 w-8"></th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider">ID</th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Cliente</th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Total</th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Items</th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Estado</th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Fecha</th>
-                        <th className="pb-3 text-xs font-medium text-slate-400 uppercase tracking-wider"></th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">ID</th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Total</th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Items</th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Estado</th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider">Fecha</th>
+                        <th className="pb-3 text-xs font-medium text-slate-300 uppercase tracking-wider"></th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-purple-400/10">
@@ -98,7 +98,7 @@ function OrderRow({
             >
                 <td className="py-3 pr-2">
                     <button
-                        className="text-slate-400 hover:text-white transition-colors"
+                        className="text-slate-300 hover:text-white transition-colors"
                         aria-label={isExpanded ? "Contraer fila" : "Expandir fila"}
                     >
                         {isExpanded ? (
@@ -112,7 +112,7 @@ function OrderRow({
                 <td className="py-3">
                     <div>
                         <p className="text-sm font-medium text-white">{order.fullName}</p>
-                        <p className="text-xs text-slate-400">{order.email}</p>
+                        <p className="text-xs text-slate-300">{order.email}</p>
                     </div>
                 </td>
                 <td className="py-3 text-sm font-semibold text-white">
@@ -124,7 +124,7 @@ function OrderRow({
                         {statusLabels[order.status]}
                     </span>
                 </td>
-                <td className="py-3 text-sm text-slate-400">
+                <td className="py-3 text-sm text-slate-300">
                     {order.createdAt.toLocaleDateString("es-AR")}
                 </td>
                 <td className="py-3">
@@ -142,23 +142,23 @@ function OrderRow({
                     <td colSpan={8} className="px-6 py-4">
                         <div className="grid gap-4 sm:grid-cols-3 text-sm">
                             <div className="flex items-start gap-2">
-                                <Package className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                <Package className="h-4 w-4 text-slate-300 mt-0.5 shrink-0" />
                                 <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wider">Items</p>
+                                    <p className="text-xs text-slate-300 uppercase tracking-wider">Items</p>
                                     <p className="text-white">{order.itemCount} productos</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-2">
-                                <MapPin className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                <MapPin className="h-4 w-4 text-slate-300 mt-0.5 shrink-0" />
                                 <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wider">Email</p>
+                                    <p className="text-xs text-slate-300 uppercase tracking-wider">Email</p>
                                     <p className="text-white">{order.email}</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-2">
-                                <CreditCard className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                <CreditCard className="h-4 w-4 text-slate-300 mt-0.5 shrink-0" />
                                 <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wider">Total</p>
+                                    <p className="text-xs text-slate-300 uppercase tracking-wider">Total</p>
                                     <p className="text-white font-semibold">
                                         ${order.total.toLocaleString("es-AR")}
                                     </p>

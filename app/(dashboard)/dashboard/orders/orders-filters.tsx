@@ -83,7 +83,7 @@ export function OrdersFilters({
         <div className="mb-6">
             <form className="flex flex-wrap gap-3 mb-4" method="GET" action="/dashboard/orders">
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-400 font-medium">Estado</label>
+                    <label className="text-xs text-slate-300 font-medium">Estado</label>
                     <select
                         name="status"
                         defaultValue={currentStatus ?? ""}
@@ -97,7 +97,7 @@ export function OrdersFilters({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-400 font-medium">Email</label>
+                    <label className="text-xs text-slate-300 font-medium">Email</label>
                     <input
                         type="text"
                         name="email"
@@ -108,7 +108,7 @@ export function OrdersFilters({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-400 font-medium">Desde</label>
+                    <label className="text-xs text-slate-300 font-medium">Desde</label>
                     <input
                         type="date"
                         name="dateFrom"
@@ -118,7 +118,7 @@ export function OrdersFilters({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-400 font-medium">Hasta</label>
+                    <label className="text-xs text-slate-300 font-medium">Hasta</label>
                     <input
                         type="date"
                         name="dateTo"

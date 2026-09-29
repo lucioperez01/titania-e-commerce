@@ -66,7 +66,7 @@ export default function ProductsClient({ categories, products }: { categories: C
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-white">Productos</h1>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className="text-sm text-slate-300 mt-1">
                             Aquí puedes ver y gestionar tus productos
                         </p>
                     </div>
@@ -91,12 +91,12 @@ export default function ProductsClient({ categories, products }: { categories: C
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-purple-400/20">
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Producto</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Precio</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Stock</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Categoría</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Online</th>
-                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Producto</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Precio</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Stock</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Categoría</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Online</th>
+                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-300 uppercase tracking-wider">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-purple-400/10">
@@ -112,7 +112,7 @@ export default function ProductsClient({ categories, products }: { categories: C
                                                         />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
-                                                            <Package className="h-5 w-5 text-slate-500" />
+                                                            <Package className="h-5 w-5 text-slate-300" />
                                                         </div>
                                                     )}
                                                     <span className="text-sm font-medium text-white">{p.name}</span>
@@ -162,12 +162,12 @@ export default function ProductsClient({ categories, products }: { categories: C
                                             />
                                         ) : (
                                             <div className="w-12 h-12 rounded-lg bg-neutral-800 flex items-center justify-center">
-                                                <Package className="h-5 w-5 text-slate-500" />
+                                                <Package className="h-5 w-5 text-slate-300" />
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-white truncate">{p.name}</p>
-                                            <p className="text-xs text-slate-400">{p.category.name}</p>
+                                            <p className="text-xs text-slate-300">{p.category.name}</p>
                                         </div>
                                         <button
                                             onClick={() => handleToggleOnline(p)}
@@ -183,11 +183,11 @@ export default function ProductsClient({ categories, products }: { categories: C
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <p className="text-xs text-slate-400">Precio</p>
+                                            <p className="text-xs text-slate-300">Precio</p>
                                             <p className="text-sm font-medium text-white">{formatCurrency(p.price)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-400">Stock</p>
+                                            <p className="text-xs text-slate-300">Stock</p>
                                             <p className="text-sm font-medium text-white">{p.stock}</p>
                                         </div>
                                     </div>
@@ -205,7 +205,7 @@ export default function ProductsClient({ categories, products }: { categories: C
                     </div>
                 )}
 
-                <p className="text-xs text-slate-500">*Los productos que estén en estado "Offline" no serán visibles para los clientes.</p>
+                <p className="text-xs text-slate-300">*Los productos que estén en estado "Offline" no serán visibles para los clientes.</p>
             </div>
         </>
     )

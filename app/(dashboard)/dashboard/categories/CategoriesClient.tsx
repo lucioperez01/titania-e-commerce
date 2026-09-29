@@ -46,7 +46,7 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-white">Categorías</h1>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className="text-sm text-slate-300 mt-1">
                             Aquí puedes ver y gestionar tus categorías
                         </p>
                     </div>
@@ -71,19 +71,19 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-purple-400/20">
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Slug</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Descripción</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Navbar</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
-                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Nombre</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Slug</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Descripción</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Navbar</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Estado</th>
+                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-300 uppercase tracking-wider">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-purple-400/10">
                                     {categories.map((c) => (
                                         <tr key={c.id} className={`hover:bg-neutral-800/40 transition-colors ${c.isDeleted ? 'opacity-50' : ''}`}>
                                             <td className="px-6 py-4 text-sm font-medium text-white">{c.name}</td>
-                                            <td className="px-6 py-4 text-sm text-slate-400">{c.slug}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-300">{c.slug}</td>
                                             <td className="px-6 py-4 text-sm text-slate-300 max-w-xs truncate" title={c.description ?? ""}>
                                                 {c.description || "—"}
                                             </td>
@@ -91,7 +91,7 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                                                 {c.showInNavbar ? (
                                                     <span className="text-sm text-emerald-400">Sí</span>
                                                 ) : (
-                                                    <span className="text-sm text-slate-500">No</span>
+                                                    <span className="text-sm text-slate-300">No</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">

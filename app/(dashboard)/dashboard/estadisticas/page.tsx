@@ -8,7 +8,7 @@ export default function EstadisticasPage() {
                 <h1 className="text-3xl font-bold tracking-tight text-white">
                     Estadísticas
                 </h1>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-300">
                     Métricas avanzadas y reportes detallados
                 </p>
             </div>

@@ -62,7 +62,7 @@ export default async function DashboardPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-white">
                         Dashboard
                     </h1>
-                    <div className="mt-1 flex items-center gap-2 text-sm text-slate-400">
+                    <div className="mt-1 flex items-center gap-2 text-sm text-slate-300">
                         <Calendar className="h-3.5 w-3.5" />
                         <span className="capitalize">{today}</span>
                     </div>
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
                 <div className="mb-4 flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-semibold text-white">Ingresos Semanales</h3>
-                        <p className="text-sm text-slate-400">Últimos 7 días</p>
+                        <p className="text-sm text-slate-300">Últimos 7 días</p>
                     </div>
                 </div>
                 <div className="h-64">
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
                     <div className="flex items-center justify-between border-b border-purple-400/20 p-6 pb-4">
                         <div>
                             <h3 className="text-lg font-semibold text-white">Órdenes Recientes</h3>
-                            <p className="text-sm text-slate-400">Últimos {recentOrders.length} pedidos</p>
+                            <p className="text-sm text-slate-300">Últimos {recentOrders.length} pedidos</p>
                         </div>
                         <Link
                             href="/dashboard/orders"
@@ -152,7 +152,7 @@ export default async function DashboardPage() {
                                             <p className="text-sm font-medium text-white group-hover:text-purple-400 transition-colors">
                                                 {order.fullName}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-slate-300">
                                                 #{order.id} — {order.email}
                                             </p>
                                         </div>

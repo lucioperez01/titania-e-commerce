@@ -88,19 +88,19 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <h2 className="text-lg font-semibold mb-4">Información del cliente</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-slate-400">Nombre</p>
+                <p className="text-xs text-slate-300">Nombre</p>
                 <p className="text-sm font-medium">{order.fullName}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Email</p>
+                <p className="text-xs text-slate-300">Email</p>
                 <p className="text-sm font-medium">{order.email}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Teléfono</p>
+                <p className="text-xs text-slate-300">Teléfono</p>
                 <p className="text-sm font-medium">{order.phone}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Estado</p>
+                <p className="text-xs text-slate-300">Estado</p>
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${statusColors[order.status]}`}>
                   {statusLabels[order.status]}
                 </span>
@@ -131,7 +131,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                 >
                   <div>
                     <p className="text-sm font-medium">{item.product.name}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-300">
                       Cantidad: {item.quantity} × ${Number(item.price).toLocaleString("es-AR")}
                     </p>
                   </div>
@@ -164,12 +164,12 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <div className="rounded-xl border border-purple-400 bg-neutral-900/20 backdrop-blur-sm p-6 shadow-xl">
               <h2 className="text-lg font-semibold mb-4">Envío</h2>
               <div>
-                <p className="text-xs text-slate-400">Número de seguimiento</p>
+                <p className="text-xs text-slate-300">Número de seguimiento</p>
                 <p className="text-sm font-mono font-medium">{order.shippingId}</p>
               </div>
               {order.shippingProvider && (
                 <div className="mt-2">
-                  <p className="text-xs text-slate-400">Transportista</p>
+                  <p className="text-xs text-slate-300">Transportista</p>
                   <p className="text-sm font-medium">{order.shippingProvider}</p>
                 </div>
               )}
@@ -206,14 +206,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <h2 className="text-lg font-semibold mb-4">Historial</h2>
             <div className="space-y-3">
               {order.transitions.length === 0 ? (
-                <p className="text-sm text-slate-400">Sin transiciones registradas</p>
+                <p className="text-sm text-slate-300">Sin transiciones registradas</p>
               ) : (
                 order.transitions.map((transition) => (
                   <div key={transition.id} className="relative pl-6">
                     <div className="absolute left-0 top-1 w-3 h-3 rounded-full bg-purple-400" />
                     <div className="absolute left-1.5 top-4 w-px h-full bg-purple-400/30" />
                     <div>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-300">
                         {new Date(transition.createdAt).toLocaleDateString("es-AR", {
                           day: "2-digit",
                           month: "short",
@@ -224,7 +224,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       <p className="text-sm font-medium">
                         {statusLabels[transition.previousStatus]} &rarr; {statusLabels[transition.newStatus]}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-300">
                         Por: {transition.trigger}
                         {transition.reason && ` — ${transition.reason}`}
                       </p>

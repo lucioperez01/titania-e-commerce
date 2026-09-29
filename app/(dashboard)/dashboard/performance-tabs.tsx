@@ -30,7 +30,7 @@ export function PerformanceTabs({ bestSellers, worstSellers }: PerformanceTabsPr
                     className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 ${
                         activeTab === "top"
                             ? "text-white border-purple-400"
-                            : "text-slate-400 border-transparent hover:text-slate-300"
+                            : "text-slate-300 border-transparent hover:text-slate-300"
                     }`}
                 >
                     <Award className="h-4 w-4" />
@@ -41,7 +41,7 @@ export function PerformanceTabs({ bestSellers, worstSellers }: PerformanceTabsPr
                     className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 ${
                         activeTab === "worst"
                             ? "text-white border-purple-400"
-                            : "text-slate-400 border-transparent hover:text-slate-300"
+                            : "text-slate-300 border-transparent hover:text-slate-300"
                     }`}
                 >
                     <AlertTriangle className="h-4 w-4" />
@@ -71,12 +71,12 @@ export function PerformanceTabs({ bestSellers, worstSellers }: PerformanceTabsPr
                                             className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                                                 i < 3
                                                     ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white"
-                                                    : "bg-neutral-800 text-slate-400"
+                                                    : "bg-neutral-800 text-slate-300"
                                             }`}
                                         >
                                             {i + 1}
                                         </span>
-                                        <Package className="h-4 w-4 text-slate-400" />
+                                        <Package className="h-4 w-4 text-slate-300" />
                                         <span className="text-sm font-medium text-white">
                                             {product.productName}
                                         </span>
@@ -85,7 +85,7 @@ export function PerformanceTabs({ bestSellers, worstSellers }: PerformanceTabsPr
                                         <span className="text-sm font-semibold text-white">
                                             {product.quantity} ventas
                                         </span>
-                                        <p className="text-xs text-slate-400">
+                                        <p className="text-xs text-slate-300">
                                             ${product.revenue.toLocaleString("es-AR")}
                                         </p>
                                     </div>
