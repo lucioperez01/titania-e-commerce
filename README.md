@@ -24,7 +24,10 @@
 - 🛒 Functional shopping cart (guest + authenticated, with DB sync)
 - 🔐 Customer authentication (email/password + Google OAuth)
 - 👤 User management with role-based access (USER/ADMIN)
-- 💳 Payment gateway integration (Mercado Pago)
+- 💳 MercadoPago Checkout Pro integration with webhooks
+- 📧 Email notifications (order confirmation, payment, shipping)
+- 📊 Order management dashboard with metrics
+- ⏰ Automatic reservation expiration (cron job)
 - ⭐ Rating and comments system
 - 📱 Responsive interface with Tailwind CSS
 
@@ -846,6 +849,98 @@ The application supports two authentication methods:
 - Logged-in users' carts are persisted to the database
 - The checkout page includes an opt-in marketing consent checkbox
 
+### MercadoPago Checkout Pro Integration
+
+The application integrates with MercadoPago Checkout Pro for payment processing. When a customer completes checkout, they are redirected to MercadoPago's hosted checkout page to complete payment.
+
+**Payment Flow:**
+1. Customer fills checkout form → order created with status `RESERVED` (stock reserved)
+2. Customer redirected to MercadoPago checkout page
+3. Customer completes payment → MercadoPago sends webhook to `/api/webhooks/mercadopago`
+4. Webhook validates signature, updates order status to `PAID` (stock committed)
+5. Email notifications sent to customer and admin
+6. If payment not completed, reservation expires after timeout (default 24h) and stock is released
+
+**Feature Flag:**
+- `PAYMENTS_ENABLED` — controls whether checkout shows payment form or "coming soon" message
+- Default: `false` (safe — payments disabled by default)
+- Set to `true` in production when ready to accept payments
+- Read at runtime from environment (not build time)
+
+**Environment Variables:**
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `PAYMENTS_ENABLED` | Feature flag to enable/disable checkout payments | No | `false` |
+| `MP_ACCESS_TOKEN` | MercadoPago access token (from MP credentials) | Yes (if payments enabled) | — |
+| `MP_PUBLIC_KEY` | MercadoPago public key (for frontend SDK) | Yes (if payments enabled) | — |
+| `MP_WEBHOOK_SECRET` | Secret for validating webhook signatures | Yes (if payments enabled) | — |
+| `RESEND_API_KEY` | Resend API key for email notifications | Yes (if emails enabled) | — |
+| `ADMIN_EMAIL` | Admin email(s) for new sale notifications, comma-separated | No | — |
+| `RESERVATION_TIMEOUT_HOURS` | Hours before unpaid reservations expire | No | `24` |
+
+**Webhook Endpoint:**
+- URL: `/api/webhooks/mercadopago`
+- Method: `POST`
+- Validates `x-signature` header using `MP_WEBHOOK_SECRET`
+- In development: signature validation is skipped (set `NODE_ENV=development`)
+- In production: signature validation is enforced
+- Deduplicates events via `WebhookLog` table
+- Processes payment events: `payment.updated`, `payment.created`
+
+**Cron Job (Reservation Expiration):**
+- Endpoint: `/api/cron/release-reservations` (if implemented)
+- Finds `RESERVED` orders older than `RESERVATION_TIMEOUT_HOURS`
+- Transitions to `EXPIRED`, releases reserved stock
+- Configure in `vercel.json` for hourly execution:
+  ```json
+  {
+    "crons": [{
+      "path": "/api/cron/release-reservations",
+      "schedule": "0 * * * *"
+    }]
+  }
+  ```
+
+**Email Notifications:**
+- Order confirmation (RESERVED) — sent to customer with MP payment link
+- Order paid (PAID) — sent to customer + admin notification
+- Order shipped (SHIPPED) — sent to customer with tracking info
+- Email sending is non-blocking (fire-and-forget pattern)
+- Errors logged but don't affect order processing
+
+**Testing with MercadoPago Sandbox:**
+
+1. **Get sandbox credentials** from [MercadoPago developers](https://www.mercadopago.com/developers/panel)
+2. **Set environment variables** in `.env.local`:
+   ```env
+   PAYMENTS_ENABLED=true
+   MP_ACCESS_TOKEN=TEST-xxxxxxxxxxxx
+   MP_PUBLIC_KEY=TEST-xxxxxxxxxxxx
+   MP_WEBHOOK_SECRET=your-webhook-secret
+   ```
+3. **Test card numbers** (Argentina sandbox):
+   - **Approved**: `4509 9535 6623 3704` (any future date, any CVV, any name)
+   - **Rejected**: `5031 7557 3453 4522` (any future date, any CVV)
+   - **Pending**: `4009 1753 3280 2766` (any future date, any CVV)
+4. **Test webhook locally** using ngrok or similar:
+   ```bash
+   ngrok http 3000
+   ```
+   Then set the ngrok URL + `/api/webhooks/mercadopago` as the webhook URL in MP dashboard
+5. **Verify order status** in database after payment:
+   - Approved card → order status = `PAID`
+   - Rejected card → order status = `CANCELLED`
+   - Pending card → order status = `RESERVED` (waiting for payment)
+
+**Troubleshooting:**
+
+- **Webhook not received**: Check webhook URL is publicly accessible (use ngrok for local dev)
+- **Signature validation fails**: Verify `MP_WEBHOOK_SECRET` matches MP dashboard setting
+- **Payment redirect fails**: Check `MP_ACCESS_TOKEN` is valid and has checkout pro permissions
+- **Order stuck in RESERVED**: Check cron job is running or manually run `/api/cron/release-reservations`
+- **Emails not sent**: Check `RESEND_API_KEY` is valid, check logs for errors
+
 ### TypeScript Alias
 Configured in `tsconfig.json`:
 ```json
@@ -931,5 +1026,4 @@ docs: update README
 
 ---
 
-**Last Updated**: March 8, 2026
->>>>>>> 588dc33 (initial commit)
+**Last Updated**: September 29, 2026
