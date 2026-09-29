@@ -5,6 +5,8 @@ import { CategoryDTO } from "@/Interfaces/dto/product.dto"
 import { Button } from "@/components/ui/button"
 import CategoryModal from "@/components/dashboard/category-modal"
 import { createCategoryAction, deleteCategoryAction, updateCategoryAction } from "@/app/(dashboard)/actions"
+import { FolderOpen, Plus } from "lucide-react"
+import { EmptyState } from "@/components/dashboard/empty-state"
 
 export default function CategoriesClient({ categories }: { categories: CategoryDTO[] }) {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -40,85 +42,87 @@ export default function CategoriesClient({ categories }: { categories: CategoryD
                 action={mode === "edit" ? updateCategoryAction : createCategoryAction}
             />
 
-            <main className="w-full flex items-center justify-center">
-                <div className="mt-5 w-xl lg:w-4xl">
-                    <h1 className="text-4xl font-bold text-white">Categorías</h1>
-                    <p className="text-md text-slate-200">Aquí puedes ver y gestionar tus categorías.</p>
-
-                    <div className="font-primary font-bold w-full max-w-4xl text-white mt-4 border border-white rounded-lg shadow-lg bg-neutral-800/30">
-                        <table className="w-full text-white">
-                            <thead className="w-full bg-linear-to-l from-purple-600/20 to-purple-600/30">
-                                <tr className="text-md">
-                                    <th className="text-center py-2">Nombre</th>
-                                    <th className="text-center py-2">Slug</th>
-                                    <th className="text-center py-2">Descripción</th>
-                                    <th className="text-center py-2">Navbar</th>
-                                    <th className="text-center py-2">Estado</th>
-                                    <th className="text-center py-2">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="w-full text-white">
-                                {categories.map((c) => (
-                                    <tr key={c.id} className={`w-full font-secondary bg-linear-to-r from-purple-600/30 to-purple-600/50 items-center justify-between hover:bg-purple-600/60 transition-colors group cursor-pointer ${c.isDeleted ? 'opacity-50' : ''}`}>
-                                        <td className="text-center px-3 py-2">{c.name}</td>
-                                        <td className="text-center px-3 py-2">{c.slug}</td>
-                                        <td className="text-center px-3 py-2">
-                                            <span className="text-xs text-white/70" title={c.description ?? ""}>
-                                                {c.description
-                                                    ? (c.description.length > 40 ? c.description.substring(0, 40) + "..." : c.description)
-                                                    : "—"
-                                                }
-                                            </span>
-                                        </td>
-                                        <td className="text-center px-3 py-2">
-                                            {c.showInNavbar ? (
-                                                <span className="text-green-400 text-xs font-semibold">✓ Sí</span>
-                                            ) : (
-                                                <span className="text-white/50 text-xs">No</span>
-                                            )}
-                                        </td>
-                                        <td className="text-center px-3 py-2">
-                                            {c.isDeleted ? (
-                                                <span className="text-red-400 text-xs font-semibold">Eliminada</span>
-                                            ) : (
-                                                <span className="text-green-400 text-xs">Activa</span>
-                                            )}
-                                        </td>
-                                        <td className="text-center px-3 py-2">
-                                            <div className="flex justify-center gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    className="font-secondary font-extrabold text-slate-600 border-neutral-700/30 hover:cursor-pointer gap-2 h-6 w-13"
-                                                    onClick={() => openEdit(c)}
-                                                >
-                                                    Editar
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    className="font-secondary font-extrabold hover:cursor-pointer gap-2 h-6 w-13"
-                                                    onClick={() => handleDelete(c.id)}
-                                                >
-                                                    Eliminar
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            <div className="mx-auto max-w-7xl space-y-6 animate-in fade-in duration-500">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-white">Categorías</h1>
+                        <p className="text-sm text-slate-400 mt-1">
+                            Aquí puedes ver y gestionar tus categorías
+                        </p>
                     </div>
-                    {categories.length === 0 && (
-                        <h2 className="text-center text-white mt-4">No hay categorías...</h2>
-                    )}
-                    <Button
-                        onClick={openCreate}
-                        variant="outline"
-                        className="mt-4 w-full font-secondary font-extrabold border-neutral-700/80 hover:cursor-pointer h-10 w-full bg-purple-600/40 text-white transition-colors border-slate-200 border-1"
-                    >
+                    <Button onClick={openCreate} size="sm">
+                        <Plus className="h-4 w-4" />
                         Agregar categoría
                     </Button>
                 </div>
-            </main>
+
+                {categories.length === 0 ? (
+                    <div className="rounded-xl border border-purple-400/20 bg-neutral-900/20 backdrop-blur-sm shadow-xl">
+                        <EmptyState
+                            icon={FolderOpen}
+                            title="No hay categorías todavía"
+                            description="Cuando agregues categorías, aparecerán aquí"
+                            action={{ label: "Agregar categoría", onClick: openCreate }}
+                        />
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-purple-400/20 bg-neutral-900/20 backdrop-blur-sm shadow-xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-purple-400/20">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Slug</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Descripción</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Navbar</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
+                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-purple-400/10">
+                                    {categories.map((c) => (
+                                        <tr key={c.id} className={`hover:bg-neutral-800/40 transition-colors ${c.isDeleted ? 'opacity-50' : ''}`}>
+                                            <td className="px-6 py-4 text-sm font-medium text-white">{c.name}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-400">{c.slug}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-300 max-w-xs truncate" title={c.description ?? ""}>
+                                                {c.description || "—"}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {c.showInNavbar ? (
+                                                    <span className="text-sm text-emerald-400">Sí</span>
+                                                ) : (
+                                                    <span className="text-sm text-slate-500">No</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {c.isDeleted ? (
+                                                    <span className="inline-flex items-center rounded-full bg-red-500/20 px-2 py-1 text-xs font-medium text-red-400">
+                                                        Eliminada
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-400">
+                                                        Activa
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button variant="outline" size="sm" onClick={() => openEdit(c)}>
+                                                        Editar
+                                                    </Button>
+                                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)}>
+                                                        Eliminar
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
         </>
     )
 }

@@ -12,7 +12,7 @@ export default function DashboardLayout({
     const [mobileOpen, setMobileOpen] = useState(false)
 
     return (
-        <div className="flex min-h-screen bg-neutral-950">
+        <div className="flex min-h-screen bg-transparent">
             <Sidebar />
             <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
