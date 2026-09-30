@@ -2,16 +2,20 @@
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-export default function IncomeGraph() {
-    const data = [
-        { name: 'Lun', income: 4000 },
-        { name: 'Mar', income: 3000 },
-        { name: 'Mié', income: 5200 },
-        { name: 'Jue', income: 2780 },
-        { name: 'Vie', income: 4890 },
-        { name: 'Sáb', income: 5390 },
-        { name: 'Dom', income: 3490 },
-    ]
+interface IncomeGraphProps {
+    data: { name: string; income: number }[];
+}
+
+export default function IncomeGraph({ data }: IncomeGraphProps) {
+    const hasData = data.some(d => d.income > 0);
+
+    if (!hasData) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <p className="text-slate-300 text-sm">Sin ventas en los últimos 7 días</p>
+            </div>
+        );
+    }
 
     return (
         <ResponsiveContainer width="100%" height="100%">

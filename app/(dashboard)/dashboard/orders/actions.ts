@@ -89,6 +89,40 @@ export async function getRecentOrdersAction(limit: number = 10) {
   return repository.getRecentOrders(limit);
 }
 
+export async function getWeeklyIncomeAction() {
+  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const paidOrders = await prisma.order.findMany({
+    where: {
+      status: "PAID",
+      isDeleted: false,
+      paidAt: { gte: sevenDaysAgo },
+    },
+    select: { total: true, paidAt: true },
+  });
+
+  const weeklyData: { name: string; income: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    date.setHours(0, 0, 0, 0);
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    const dayIncome = paidOrders
+      .filter((o) => o.paidAt && o.paidAt >= date && o.paidAt < nextDate)
+      .reduce((sum, o) => sum + Number(o.total), 0);
+
+    weeklyData.push({ name: dayNames[date.getDay()], income: dayIncome });
+  }
+
+  return weeklyData;
+}
+
 export async function getOrderStatusCountsAction() {
   const statuses: OrderStatus[] = ["PENDING", "RESERVED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED", "EXPIRED"];
 

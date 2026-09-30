@@ -12,16 +12,17 @@ import {
     AlertTriangle,
     Calendar,
 } from "lucide-react"
-import { getDashboardMetricsAction, getRecentOrdersAction } from "./orders/actions"
+import { getDashboardMetricsAction, getRecentOrdersAction, getWeeklyIncomeAction } from "./orders/actions"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { StatCard } from "@/components/dashboard/stat-card"
 import IncomeGraph from "./graph/incomegraph"
 import { PerformanceTabs } from "./performance-tabs"
 
 export default async function DashboardPage() {
-    const [metrics, recentOrders] = await Promise.all([
+    const [metrics, recentOrders, weeklyIncome] = await Promise.all([
         getDashboardMetricsAction(),
         getRecentOrdersAction(10),
+        getWeeklyIncomeAction(),
     ])
 
     const statusLabels: Record<string, string> = {
@@ -107,7 +108,7 @@ export default async function DashboardPage() {
                     </div>
                 </div>
                 <div className="h-64">
-                    <IncomeGraph />
+                    <IncomeGraph data={weeklyIncome} />
                 </div>
             </div>
 
