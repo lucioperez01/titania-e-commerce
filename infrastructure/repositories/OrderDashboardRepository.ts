@@ -43,6 +43,7 @@ export interface DashboardMetrics {
     revenue: number;
   }>;
   repeatCustomers: number;
+  todaySales: number;
 }
 
 export class OrderDashboardRepository {
@@ -129,7 +130,12 @@ export class OrderDashboardRepository {
   async getDashboardMetrics(): Promise<DashboardMetrics> {
     const paidStatuses: OrderStatus[] = ["PAID", "SHIPPED", "DELIVERED"];
 
-    const [totalSoldResult, avgTicketResult, orderItems, repeatCustomersResult] =
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [totalSoldResult, avgTicketResult, orderItems, repeatCustomersResult, todaySalesResult] =
       await Promise.all([
         prisma.order.aggregate({
           where: { status: { in: paidStatuses }, isDeleted: false },
@@ -152,6 +158,10 @@ export class OrderDashboardRepository {
           by: ["email"],
           where: { status: { in: paidStatuses }, isDeleted: false },
           _count: { email: true },
+        }),
+        prisma.order.aggregate({
+          where: { status: "PAID", isDeleted: false, paidAt: { gte: today, lt: tomorrow } },
+          _sum: { total: true },
         }),
       ]);
 
@@ -191,6 +201,8 @@ export class OrderDashboardRepository {
       (group) => group._count.email > 1
     ).length;
 
+    const todaySales = Number(todaySalesResult._sum.total ?? 0);
+
     return {
       totalSold,
       totalOrders,
@@ -198,6 +210,7 @@ export class OrderDashboardRepository {
       bestSellers,
       worstSellers,
       repeatCustomers,
+      todaySales,
     };
   }
 

@@ -11,6 +11,7 @@ import {
     Award,
     AlertTriangle,
     Calendar,
+    CalendarCheck,
 } from "lucide-react"
 import { getDashboardMetricsAction, getRecentOrdersAction, getWeeklyIncomeAction } from "./orders/actions"
 import { EmptyState } from "@/components/dashboard/empty-state"
@@ -97,6 +98,13 @@ export default async function DashboardPage() {
                     value={metrics.repeatCustomers}
                     icon={<Users className="h-4 w-4 text-purple-400" />}
                     trend={{ value: 3, label: "+1 vez" }}
+                />
+                <StatCard
+                    title="Ventas Hoy"
+                    value={`$${metrics.todaySales.toLocaleString("es-AR")}`}
+                    icon={<CalendarCheck className="h-5 w-5 text-purple-400" />}
+                    trend={{ value: 0, label: "hoy" }}
+                    variant="secondary"
                 />
             </div>
 
