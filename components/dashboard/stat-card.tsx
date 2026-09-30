@@ -15,7 +15,7 @@ export function StatCard({ title, value, icon, trend, variant = "secondary" }: S
         <div
             className={`rounded-xl border shadow-xl backdrop-blur-sm ${
                 isHero
-                    ? "col-span-1 md:col-span-2 row-span-2 bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-purple-400/30 p-6 md:p-8"
+                    ? "col-span-1 md:col-span-2 row-span-2 h-full bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-purple-400/30 p-6 md:p-8 flex flex-col justify-center"
                     : "bg-neutral-900/20 border-purple-400/20 p-5 hover:bg-neutral-800/40 transition-all"
             }`}
         >
