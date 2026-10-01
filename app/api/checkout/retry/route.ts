@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     }
 
     const provider = new MercadoPagoProvider(accessToken);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? (
+    const baseUrl = process.env.BASE_URL ?? (
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"
     );
 

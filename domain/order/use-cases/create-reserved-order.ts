@@ -180,7 +180,7 @@ export class CreateReservedOrder {
     });
 
     // 5. Create MP Preference (outside transaction — this is external API call)
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? (
+    const baseUrl = process.env.BASE_URL ?? (
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"
     );
 

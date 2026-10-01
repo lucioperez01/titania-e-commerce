@@ -97,7 +97,7 @@ const mockOrder = { id: 200 };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  process.env.NEXT_PUBLIC_BASE_URL = "http://localhost:3000";
+  process.env.BASE_URL = "http://localhost:3000";
   delete process.env.VERCEL_URL;
 });
 
