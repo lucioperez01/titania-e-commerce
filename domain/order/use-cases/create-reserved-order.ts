@@ -185,16 +185,30 @@ export class CreateReservedOrder {
     );
 
     try {
+      // Build items list for MP preference
+      const mpItems = itemsWithPrice.map((item) => ({
+        id: `product-${item.productId}${item.variantId ? `-variant-${item.variantId}` : ""}`,
+        title: item.title,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        pictureUrl: item.pictureUrl,
+      }));
+
+      // Add shipping as an item if cost > 0
+      if (shippingCost > 0) {
+        mpItems.push({
+          id: "shipping",
+          title: "Envío",
+          quantity: 1,
+          unitPrice: shippingCost,
+          pictureUrl: undefined,
+        });
+      }
+
       const preference = await this.provider.createPreference({
         orderId: result.id,
         email: input.email,
-        items: itemsWithPrice.map((item) => ({
-          id: `product-${item.productId}${item.variantId ? `-variant-${item.variantId}` : ""}`,
-          title: item.title,
-          quantity: item.quantity,
-          unitPrice: item.price,
-          pictureUrl: item.pictureUrl,
-        })),
+        items: mpItems,
         notificationUrl: `${baseUrl}/api/webhooks/mercadopago`,
         successUrl: `${baseUrl}/order/success?order_id=${result.id}`,
         failureUrl: `${baseUrl}/order/failure?order_id=${result.id}`,

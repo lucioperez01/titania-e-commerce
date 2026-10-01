@@ -1,0 +1,113 @@
+{
+  "subject_hash": "sha256:3daed49f7af1f9b46c369ea045636f7378be4d629559309c6d52beae20c35674",
+  "lens": "review-reliability",
+  "inspection": {
+    "status": "completed",
+    "paths": [
+      "app/(store)/checkout/actions.ts",
+      "app/(store)/order/failure/page.tsx",
+      "app/(store)/order/failure/retry-button.tsx",
+      "app/(store)/order/pending/page.tsx",
+      "app/(store)/order/success/page.tsx",
+      "app/api/checkout/retry/route.ts",
+      "app/api/webhooks/mercadopago/route.ts",
+      "app/api/webhooks/mercadopago/tests/route.test.ts",
+      "domain/order/use-cases/create-reserved-order.ts",
+      "domain/order/use-cases/tests/create-reserved-order.test.ts",
+      "domain/order/use-cases/tests/transition-order-status.test.ts",
+      "domain/order/use-cases/transition-order-status.ts",
+      "domain/providers/payment-provider.ts",
+      "infrastructure/providers/mercado-pago-provider.ts",
+      "infrastructure/providers/tests/mercado-pago-provider.test.ts",
+      "infrastructure/providers/tests/webhook-signature-validator.test.ts",
+      "infrastructure/providers/webhook-signature-validator.ts",
+      "package-lock.json",
+      "package.json",
+      "prisma/schema.prisma"
+    ]
+  },
+  "findings": [
+    {
+      "id": "R3-REL-001",
+      "lens": "reliability",
+      "severity": "CRITICAL",
+      "location": "domain/order/use-cases/transition-order-status.ts:38",
+      "claim": "TransitionOrderStatus TOCTOU race allows double stock commit. The state-machine validation (findUnique at line 38) happens OUTSIDE the Prisma transaction (line 57). Two concurrent webhook deliveries for the same order can both read status=RESERVED, both pass the VALID_TRANSITIONS check, and both enter separate transactions that call commitStock — double-decrementing stock and reservedStock.",
+      "proof_refs": [
+        "Lines 38-57: findUnique reads order.status outside the transaction",
+        "Lines 57-113: the transaction mutates stock based on the stale read",
+        "No SELECT FOR UPDATE or optimistic locking protects the read-check-write sequence"
+      ],
+      "evidence_class": "deterministic",
+      "causal_disposition": "introduced"
+    },
+    {
+      "id": "R3-REL-002",
+      "lens": "reliability",
+      "severity": "CRITICAL",
+      "location": "app/api/webhooks/mercadopago/route.ts:121",
+      "claim": "Webhook handler reads payment status from payload fields that MP does not send. MercadoPago payment webhooks send data: { id: <payment_id> } — only the payment ID. The handler reads paymentData.status and paymentData.external_reference (lines 121, 128), which are NOT present in real MP webhook payloads. The handler will throw 'missing status' or 'missing external_reference' for every real webhook, returning 500 and preventing any order from transitioning to PAID.",
+      "proof_refs": [
+        "Line 121: const paymentStatus = (paymentData?.status as string) ?? body.status as string — neither data.status nor body.status exist in MP's actual webhook schema",
+        "Line 128: paymentData?.external_reference — also absent",
+        "The handler must call Payment.get({ id: data.id }) to retrieve the full payment object",
+        "The test fixtures (route.test.ts lines 44-52) inject non-standard fields into the mock body, masking this defect"
+      ],
+      "evidence_class": "deterministic",
+      "causal_disposition": "introduced"
+    },
+    {
+      "id": "R3-REL-003",
+      "lens": "reliability",
+      "severity": "WARNING",
+      "location": "domain/order/use-cases/create-reserved-order.ts:78",
+      "claim": "Stock validation reads stale data outside transaction — concurrent checkouts can over-reserve. In CreateReservedOrder, stock availability is checked at lines 78-95 by reading product.stock and product.reservedStock outside the transaction. The reservedStock increment happens inside the transaction at lines 159-171. Between the read and the transaction, a concurrent checkout can reserve the same units.",
+      "proof_refs": [
+        "Lines 78-86: available = availableStock - reservedStock (read outside tx)",
+        "Lines 119-180: transaction increments reservedStock without re-checking availability",
+        "No database constraint prevents reservedStock > stock"
+      ],
+      "evidence_class": "deterministic",
+      "causal_disposition": "introduced"
+    },
+    {
+      "id": "R3-REL-004",
+      "lens": "reliability",
+      "severity": "WARNING",
+      "location": "domain/order/use-cases/create-reserved-order.ts:216",
+      "claim": "Orphaned RESERVED order when MP preference creation fails — cart CONVERTED, no recovery path. If the MercadoPago API call fails (lines 187-223), the Prisma transaction has already committed: order is RESERVED, stock is reserved, cart is CONVERTED. The catch block throws but does not roll back the transaction.",
+      "proof_refs": [
+        "Lines 119-180: transaction commits order + stock reservation + cart CONVERTED",
+        "Lines 187-223: MP preference creation is outside the transaction; failure leaves orphaned state",
+        "actions.ts:217: idempotency check requires recentOrder.preferenceId to be truthy",
+        "Line 289: error redirect goes to /checkout?error=... with no order_id"
+      ],
+      "evidence_class": "deterministic",
+      "causal_disposition": "introduced"
+    },
+    {
+      "id": "R3-REL-005",
+      "lens": "reliability",
+      "severity": "WARNING",
+      "location": "app/api/webhooks/mercadopago/route.ts:55",
+      "claim": "Webhook deduplication allows re-processing of failed events on MP retry. The dedup check (line 55-61) only matches WebhookLog entries where processed=true. If processing fails (line 93-98 sets processed=false), and MercadoPago retries the same event, the handler creates a SECOND WebhookLog entry and re-processes the event.",
+      "proof_refs": [
+        "Lines 55-61: findFirst filters on processed: true",
+        "Lines 93-98: on failure, processed is set to false",
+        "A retried event will not match the existing unprocessed log, creating a duplicate entry"
+      ],
+      "evidence_class": "deterministic",
+      "causal_disposition": "introduced"
+    }
+  ],
+  "evidence": [
+    "Inspected all 20 files listed in the PR scope",
+    "Analyzed state machine transitions in transition-order-status.ts (VALID_TRANSITIONS map, stock operations per transition)",
+    "Traced webhook handler flow: signature validation → dedup → processPaymentEvent → transition",
+    "Traced checkout flow: idempotency check → CreateReservedOrder transaction → MP preference creation",
+    "Compared webhook test fixtures against real MercadoPago webhook payload schema",
+    "Analyzed stock reservation/commit/release logic for atomicity and race conditions",
+    "Reviewed retry endpoint for correctness and edge cases",
+    "Verified Prisma transaction boundaries and what happens on partial failure"
+  ]
+}

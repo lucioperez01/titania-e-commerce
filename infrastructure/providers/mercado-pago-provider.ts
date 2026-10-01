@@ -54,7 +54,8 @@ export class MercadoPagoProvider implements PaymentProvider {
                 payer: {
                     email: params.email,
                 },
-                auto_return: "approved",
+                // auto_return solo funciona en producción, no en sandbox
+                // auto_return: "approved",
                 binary_mode: true,
             },
         });
