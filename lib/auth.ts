@@ -93,9 +93,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const role = adminEmails.includes(user.email) ? "ADMIN" : "USER";
+        
+        // Extract firstName and lastName from Google's full name
+        const nameParts = user.name?.split(" ") ?? [];
+        const firstName = nameParts[0] ?? null;
+        const lastName = nameParts.slice(1).join(" ") || null;
+        
         await prisma.user.create({
           data: {
             email: user.email,
+            firstName,
+            lastName,
             role,
             passwordHash: null as string | null,
           },

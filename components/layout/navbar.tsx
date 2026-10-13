@@ -4,7 +4,7 @@ import SearchButton from "@/components/search/search-button"
 import WishlistIcon from "@/components/wishlist/wishlist-icon"
 import { auth, signOut } from "@/lib/auth"
 import { getNavbarCategories } from "@/application/use-cases/get-navbar-categories"
-import { User, LayoutDashboard } from "lucide-react"
+import { User, LayoutDashboard, Package } from "lucide-react"
 import MobileMenu from "./mobile-menu"
 import CategoryNav from "./category-nav"
 
@@ -41,7 +41,14 @@ export default async function Navbar() {
               <span className="flex items-center text-[11px] text-white/50 font-secondary max-w-[140px] truncate">
                 {session.user.email}
               </span>
-              {session.user.role === "ADMIN" && (
+              <Link
+                  href="/account/orders"
+                  className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
+                >
+                  <Package className="w-4 h-4" />
+                  <span className="text-[11px] uppercase tracking-wider font-secondary">Mis Pedidos</span>
+                </Link>
+                {session.user.role === "ADMIN" && (
                 <Link
                   href="/dashboard"
                   className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
