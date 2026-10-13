@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import { saveConsent, checkoutWithMercadoPago, getOrderSummary } from "./actions";
 import { useCart } from "@/components/cart/cart-provider";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { ProvinceSelect } from "@/components/checkout/province-select";
+import { calculateShippingCost, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping-zones";
 
 export default function CheckoutForm() {
   const { state: cartState, dispatch } = useCart();
@@ -26,11 +28,19 @@ export default function CheckoutForm() {
 
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
 
+  const calculatedShipping = useMemo(() => {
+    if (!addressProvince) return null;
+    return calculateShippingCost(addressProvince, orderSummary.subtotal);
+  }, [addressProvince, orderSummary.subtotal]);
+
+  const displayShipping = calculatedShipping ?? orderSummary.shippingCost;
+  const displayTotal = orderSummary.subtotal + displayShipping;
+
   useEffect(() => {
     if (session?.user?.id && !cartState.isHydrating) {
-      getOrderSummary().then(setOrderSummary);
+      getOrderSummary(addressProvince || undefined).then(setOrderSummary);
     }
-  }, [session?.user?.id, cartState.isHydrating, cartState.items]);
+  }, [session?.user?.id, cartState.isHydrating, cartState.items, addressProvince]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -172,14 +182,10 @@ export default function CheckoutForm() {
             </div>
             <div>
               <label htmlFor="addressProvince" className="block text-sm font-medium text-white/80">Provincia</label>
-              <input
-                id="addressProvince"
-                type="text"
-                required
+              <ProvinceSelect
                 value={addressProvince}
-                onChange={e => setAddressProvince(e.target.value)}
+                onChange={setAddressProvince}
                 disabled={isPending}
-                className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
               />
             </div>
           </div>
@@ -223,27 +229,37 @@ export default function CheckoutForm() {
                 <span>${orderSummary.subtotal.toLocaleString("es-AR")}</span>
               </div>
               <div className="flex justify-between text-white/70">
-                <span>Envío</span>
-                <span>{orderSummary.shippingCost === 0 ? "Gratis" : `$${orderSummary.shippingCost.toLocaleString("es-AR")}`}</span>
+                <span>Envío {addressProvince ? `a ${addressProvince}` : ""}</span>
+                <span>{displayShipping === 0 ? "Gratis" : `$${displayShipping.toLocaleString("es-AR")}`}</span>
               </div>
-              {orderSummary.shippingCost > 0 && orderSummary.subtotal < 50000 && (
+              {addressProvince && displayShipping === 0 && (
                 <p className="text-xs text-purple-400">
-                  ¡Envío gratis en compras superiores a $50.000!
+                  ¡Envío gratis en compras superiores a ${FREE_SHIPPING_THRESHOLD.toLocaleString("es-AR")}!
+                </p>
+              )}
+              {addressProvince && displayShipping > 0 && (
+                <p className="text-xs text-purple-400">
+                  ¡Envío gratis en compras superiores a ${FREE_SHIPPING_THRESHOLD.toLocaleString("es-AR")}!
+                </p>
+              )}
+              {!addressProvince && (
+                <p className="text-xs text-white/50">
+                  Seleccioná una provincia para calcular el envío
                 </p>
               )}
               <div className="flex justify-between text-white font-bold text-base pt-2 border-t border-slate-200/10">
                 <span>Total</span>
-                <span>${orderSummary.total.toLocaleString("es-AR")}</span>
+                <span>${displayTotal.toLocaleString("es-AR")}</span>
               </div>
             </div>
           </div>
 
           <button
             type="submit"
-            disabled={isPending || totalItems === 0}
+            disabled={isPending || totalItems === 0 || !addressProvince}
             className="w-full rounded-md bg-purple-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 mt-4"
           >
-            {isPending ? "Procesando..." : `Pagar $${orderSummary.total.toLocaleString("es-AR")}`}
+            {isPending ? "Procesando..." : `Pagar $${displayTotal.toLocaleString("es-AR")}`}
           </button>
         </form>
 

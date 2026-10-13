@@ -1,6 +1,7 @@
 import { prisma } from "@/infrastructure/db/prismaClient";
 import { MercadoPagoProvider } from "@/infrastructure/providers/mercado-pago-provider";
 import { OrderStatus } from "@/domain/order/entities/OrderStatus";
+import { calculateShippingCost } from "@/lib/shipping-zones";
 
 export interface CartItemInput {
   productId: number;
@@ -112,7 +113,7 @@ export class CreateReservedOrder {
       });
     }
 
-    const shippingCost = subtotal >= 50000 ? 0 : 14000;
+    const shippingCost = calculateShippingCost(input.addressProvince, subtotal);
     const total = subtotal + shippingCost;
 
     // 4. Create order + address + order items + stock reservation in a single transaction

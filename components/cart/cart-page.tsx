@@ -9,14 +9,14 @@ import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import AddToCartButton from "./add-to-cart-button"
 import { Truck, ShoppingBag } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_ZONES } from "@/lib/shipping-zones"
 
 interface CartPageProps {
   products: ProductDTO[]
 }
 
-const SHIPPING_COST = 14000
+const MIN_SHIPPING_COST = Math.min(...Object.values(SHIPPING_ZONES).map(z => z.precio))
 const TAX_RATE = 0.21
-const FREE_SHIPPING_THRESHOLD = 50000
 
 export default function CartPage({ products }: CartPageProps) {
     const { state } = useCart()
@@ -28,7 +28,7 @@ export default function CartPage({ products }: CartPageProps) {
     }, 0)
 
     const taxes = subtotal * TAX_RATE
-    const total = subtotal + (subtotal === 0 ? 0 : SHIPPING_COST + taxes)
+    const total = subtotal + taxes
     const remainingForFreeShipping = Math.max(FREE_SHIPPING_THRESHOLD - subtotal, 0)
     const shippingProgress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)
     const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
@@ -77,7 +77,11 @@ export default function CartPage({ products }: CartPageProps) {
                 <div className="flex items-center gap-2">
                     <Truck className="h-5 w-5 text-purple-400" />
                     <p className="text-sm font-medium text-white">
-                        {isFreeShipping ? "¡Envío gratis!" : `Te faltan $${remainingForFreeShipping.toLocaleString("es-AR")} para envío gratis!`}
+                        {isFreeShipping
+                            ? "¡Envío gratis!"
+                            : remainingForFreeShipping > 0
+                              ? `Te faltan $${remainingForFreeShipping.toLocaleString("es-AR")} para envío gratis!`
+                              : "Envío gratis en compras superiores a $100.000"}
                     </p>
                 </div>
                 <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-700/50">
@@ -91,7 +95,7 @@ export default function CartPage({ products }: CartPageProps) {
                 </div>
                 {!isFreeShipping && (
                     <p className="mt-2 text-xs text-white/60">
-                        Comprá por ${FREE_SHIPPING_THRESHOLD.toLocaleString("es-AR")} o más y el envío es gratis
+                        Envío desde ${MIN_SHIPPING_COST.toLocaleString("es-AR")} · Envío gratis en compras superiores a ${FREE_SHIPPING_THRESHOLD.toLocaleString("es-AR")}
                     </p>
                 )}
             </div>
@@ -154,7 +158,7 @@ export default function CartPage({ products }: CartPageProps) {
             </div>
 
             <p className="mt-4 text-sm leading-6 text-slate-300">
-            El envío está hardcodeado por ahora. Más adelante lo traemos desde la API y mostramos el cálculo real.
+            El envío se calcula en el checkout según tu provincia.
             </p>
 
             <div className="mt-6 space-y-4 rounded-xl border border-slate-200/10 p-4">
@@ -165,7 +169,7 @@ export default function CartPage({ products }: CartPageProps) {
 
             <div className="flex items-center justify-between text-sm text-slate-300">
                 <span>Envío</span>
-                <span>${subtotal === 0 ? 0 : SHIPPING_COST.toFixed(2)}</span>
+                <span className="text-xs text-white/50">Se calcula en el checkout</span>
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-200/10 pt-4 text-sm text-slate-300">

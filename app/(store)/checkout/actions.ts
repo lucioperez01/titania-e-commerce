@@ -6,6 +6,7 @@ import { PrismaCartRepository } from "@/infrastructure/repositories/PrismaCartRe
 import { CreateReservedOrder } from "@/domain/order/use-cases/create-reserved-order";
 import { redirect } from "next/navigation";
 import { sendOrderEmailAsync } from "@/lib/email/send-order-emails";
+import { calculateShippingCost } from "@/lib/shipping-zones";
 
 export interface ConsentResult {
   success: boolean;
@@ -33,7 +34,7 @@ export interface OrderSummary {
 
 const IDEMPOTENCY_WINDOW_MS = 5000; // 5 seconds
 
-export async function getOrderSummary(): Promise<OrderSummary> {
+export async function getOrderSummary(province?: string): Promise<OrderSummary> {
   try {
     const { auth } = await import("@/lib/auth");
     const session = await auth();
@@ -67,7 +68,7 @@ export async function getOrderSummary(): Promise<OrderSummary> {
       subtotal += Number(price) * item.quantity;
     }
 
-    const shippingCost = subtotal >= 50000 ? 0 : 14000;
+    const shippingCost = province ? calculateShippingCost(province, subtotal) : 0;
     const total = subtotal + shippingCost;
     const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -151,7 +152,7 @@ export async function createOrderAction(formData: {
       subtotal += Number(price) * item.quantity;
     }
 
-    const shippingCost = subtotal >= 50000 ? 0 : 14000;
+    const shippingCost = calculateShippingCost(formData.addressProvince, subtotal);
     const total = subtotal + shippingCost;
 
     const address = await prisma.address.create({
