@@ -37,6 +37,9 @@ export const metadata: Metadata = {
     template: "%s | Titania",
   },
   description: "Indumentaria y accesorios de calidad accesible",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
