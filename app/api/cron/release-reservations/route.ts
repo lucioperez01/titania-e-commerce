@@ -9,7 +9,8 @@ function validateAuth(request: Request): boolean {
     return false;
   }
   const authHeader = request.headers.get("authorization");
-  return authHeader === secret;
+  // Vercel Cron sends: "Authorization: Bearer <cron-secret>"
+  return authHeader === `Bearer ${secret}`;
 }
 
 export async function GET(request: Request) {
