@@ -1,9 +1,8 @@
 import { Rating } from "@/components/product/rating"
 import Price from "@/components/product/price"
-import Link from "next/link"
 import AddToCartButton from "@/components/cart/add-to-cart-button"
+import BuyNowButton from "@/components/cart/buy-now-button"
 import WishlistButton from "@/components/wishlist/wishlist-button"
-import { Button } from "@/components/ui/button"
 import { LucideCheck } from "lucide-react"
 import { LucideTruck } from "lucide-react"
 import ProductImageCarousel from "@/components/product/productImageCarousel"
@@ -62,8 +61,8 @@ export default async function ProductPage({
                         <Price value={product.price} oldValue={oldPrice} />
 
                         <div className="flex flex-col font-secondary font-extralight gap-2">
-                            <li className=" ml-5">Envio gratis</li>
-                            <li className="ml-5">Devolucion gratis</li>
+                            <li className=" ml-5">Envío gratis en compras superiores a $100.000</li>
+                            <li className="ml-5">Devolución gratis</li>
                         </div>
 
                         <div className="border-t pt-2">
@@ -86,9 +85,7 @@ export default async function ProductPage({
                         )}
 
                         <div className="flex flex-col gap-3 mt-3">
-                            <Link href="#">
-                                <Button variant="outline" className="w-full cursor-pointer text-black text-md font-light font-primary py-5">Comprar ahora</Button>
-                            </Link>
+                            <BuyNowButton productId={product.id} stock={product.stock} />
 
                             <AddToCartButton productId={product.id} stock={product.stock} />
                         </div>
