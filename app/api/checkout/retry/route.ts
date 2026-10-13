@@ -81,6 +81,8 @@ export async function POST(request: Request) {
       pendingUrl: `${baseUrl}/order/pending?order_id=${order.id}`,
     });
 
+    console.log("creando preferencia con notificacion a: " + `${baseUrl}/api/webhooks/mercadopago`)
+
     await prisma.order.update({
       where: { id: order.id },
       data: { preferenceId: preference.preferenceId },

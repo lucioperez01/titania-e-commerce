@@ -17,15 +17,32 @@ type Props = {
     action: (formData: FormData) => Promise<ActionResult>;
 }
 
+const PREDEFINED_SIZES = new Set([
+    "XS", "S", "M", "L", "XL", "XXL",
+    "36", "38", "40", "42", "44", "46",
+    "35", "37", "39",
+])
+
+function resolveInitialSize(product?: ProductDTO): { selectValue: string; customSize: string } {
+    if (!product?.size) return { selectValue: "", customSize: "" }
+    if (PREDEFINED_SIZES.has(product.size)) return { selectValue: product.size, customSize: "" }
+    return { selectValue: "__other__", customSize: product.size }
+}
+
 export default function ProductModal({ categories, product, isOpen, mode = "create", onClose, action }: Props) {
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
     const [imageUrls, setImageUrls] = useState<string[]>([])
+    const [sizeSelectValue, setSizeSelectValue] = useState("")
+    const [customSize, setCustomSize] = useState("")
 
     useEffect(() => {
         setImageUrls(
             product?.images?.map((image) => image.url) ?? [""]
         )
+        const initial = resolveInitialSize(product)
+        setSizeSelectValue(initial.selectValue)
+        setCustomSize(initial.customSize)
     }, [product?.id])
 
     if (!isOpen) return null
@@ -57,7 +74,41 @@ export default function ProductModal({ categories, product, isOpen, mode = "crea
             return
         }
 
+        // Resolve size value from select + custom input
+        let resolvedSize = ""
+        if (sizeSelectValue === "__other__") {
+            resolvedSize = customSize.trim()
+        } else if (sizeSelectValue) {
+            resolvedSize = sizeSelectValue
+        }
+
+        if (resolvedSize.length > 50) {
+            setError("El talle debe tener 50 caracteres o menos.")
+            return
+        }
+
         const formData = new FormData(e.currentTarget)
+        // Set the resolved size value (overrides any hidden input)
+        formData.set("size", resolvedSize)
+
+        // Client-side validation for width/length
+        const widthVal = formData.get("width")
+        const lengthVal = formData.get("length")
+        if (widthVal !== null && String(widthVal).trim() !== "") {
+            const w = Number(widthVal)
+            if (!Number.isNaN(w) && w < 0) {
+                setError("El ancho no puede ser negativo.")
+                return
+            }
+        }
+        if (lengthVal !== null && String(lengthVal).trim() !== "") {
+            const l = Number(lengthVal)
+            if (!Number.isNaN(l) && l < 0) {
+                setError("El largo no puede ser negativo.")
+                return
+            }
+        }
+
         startTransition(async () => {
             const result = await action(formData)
 
@@ -165,6 +216,90 @@ export default function ProductModal({ categories, product, isOpen, mode = "crea
                             className="w-full px-3 max-h-40 py-2 border border-gray-300 rounded-md text-neutral-900"
                         />
                     </div>
+                    {/* ── Measurements section ── */}
+                    <div className="mb-4 border-t border-gray-200 pt-4">
+                        <p className="text-sm font-semibold text-neutral-700 mb-3">Medidas (opcional)</p>
+
+                        <div className="mb-4">
+                            <label htmlFor="size-select" className="block text-sm font-medium mb-2 text-neutral-900">Talle</label>
+                            <select
+                                id="size-select"
+                                value={sizeSelectValue}
+                                onChange={(e) => {
+                                    setSizeSelectValue(e.target.value)
+                                    if (e.target.value !== "__other__") {
+                                        setCustomSize("")
+                                    }
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
+                            >
+                                <option value="">Sin talle</option>
+                                <optgroup label="Alfabético">
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </optgroup>
+                                <optgroup label="Jeans">
+                                    <option value="36">36</option>
+                                    <option value="38">38</option>
+                                    <option value="40">40</option>
+                                    <option value="42">42</option>
+                                    <option value="44">44</option>
+                                    <option value="46">46</option>
+                                </optgroup>
+                                <optgroup label="Calzado">
+                                    <option value="35">35</option>
+                                    <option value="36">36</option>
+                                    <option value="37">37</option>
+                                    <option value="38">38</option>
+                                    <option value="39">39</option>
+                                    <option value="40">40</option>
+                                </optgroup>
+                                <option value="__other__">Otro...</option>
+                            </select>
+                            {sizeSelectValue === "__other__" && (
+                                <input
+                                    type="text"
+                                    value={customSize}
+                                    onChange={(e) => setCustomSize(e.target.value)}
+                                    maxLength={50}
+                                    placeholder="Ingresar talle personalizado"
+                                    className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
+                                />
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="width" className="block text-sm font-medium mb-2 text-neutral-900">Ancho (cm)</label>
+                                <input
+                                    type="number"
+                                    id="width"
+                                    name="width"
+                                    min={0}
+                                    step={0.1}
+                                    defaultValue={product?.width ?? ""}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="length" className="block text-sm font-medium mb-2 text-neutral-900">Largo (cm)</label>
+                                <input
+                                    type="number"
+                                    id="length"
+                                    name="length"
+                                    min={0}
+                                    step={0.1}
+                                    defaultValue={product?.length ?? ""}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-2 text-neutral-900">URL de imagen *</label>
                         {imageUrls.map((url, index) => (

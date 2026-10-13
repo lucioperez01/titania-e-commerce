@@ -120,4 +120,165 @@ describe("dashboard actions", () => {
             expect(result.error).toBe("DB error")
         })
     })
+
+    describe("createProductAction with measurements", () => {
+        it("parses size, width, and length from FormData", async () => {
+            const formData = buildProductFormData(["https://example.com/1.jpg"], {
+                size: "M",
+                width: "50.5",
+                length: "70.2",
+            })
+
+            const result = await createProductAction(formData)
+
+            expect(result.success).toBe(true)
+            expect(mockCreateProduct).toHaveBeenCalledTimes(1)
+            const input = mockCreateProduct.mock.calls[0][0]
+            expect(input.size).toBe("M")
+            expect(input.width).toBe(50.5)
+            expect(input.length).toBe(70.2)
+        })
+
+        it("parses empty measurements as null", async () => {
+            const formData = buildProductFormData(["https://example.com/1.jpg"], {
+                size: "",
+                width: "",
+                length: "",
+            })
+
+            const result = await createProductAction(formData)
+
+            expect(result.success).toBe(true)
+            const input = mockCreateProduct.mock.calls[0][0]
+            expect(input.size).toBeNull()
+            expect(input.width).toBeNull()
+            expect(input.length).toBeNull()
+        })
+
+        it("rejects size longer than 50 characters", async () => {
+            const formData = buildProductFormData(["https://example.com/1.jpg"], {
+                size: "a".repeat(51),
+            })
+
+            const result = await createProductAction(formData)
+
+            expect(result.success).toBe(false)
+            expect(result.error).toMatch(/talle.*50 caracteres/i)
+            expect(mockCreateProduct).not.toHaveBeenCalled()
+        })
+
+        it("rejects negative width", async () => {
+            const formData = buildProductFormData(["https://example.com/1.jpg"], {
+                width: "-5",
+            })
+
+            const result = await createProductAction(formData)
+
+            expect(result.success).toBe(false)
+            expect(result.error).toMatch(/ancho.*negativo/i)
+            expect(mockCreateProduct).not.toHaveBeenCalled()
+        })
+
+        it("rejects negative length", async () => {
+            const formData = buildProductFormData(["https://example.com/1.jpg"], {
+                length: "-10",
+            })
+
+            const result = await createProductAction(formData)
+
+            expect(result.success).toBe(false)
+            expect(result.error).toMatch(/largo.*negativo/i)
+            expect(mockCreateProduct).not.toHaveBeenCalled()
+        })
+
+        it("accepts zero values for width and length", async () => {
+            const formData = buildProductFormData(["https://example.com/1.jpg"], {
+                width: "0",
+                length: "0",
+            })
+
+            const result = await createProductAction(formData)
+
+            expect(result.success).toBe(true)
+            const input = mockCreateProduct.mock.calls[0][0]
+            expect(input.width).toBe(0)
+            expect(input.length).toBe(0)
+        })
+    })
+
+    describe("updateProductAction with measurements", () => {
+        it("parses size, width, and length from FormData", async () => {
+            const formData = new FormData()
+            formData.set("id", "1")
+            formData.set("name", "Remera")
+            formData.set("size", "L")
+            formData.set("width", "45.5")
+            formData.set("length", "60")
+
+            const result = await updateProductAction(formData)
+
+            expect(result.success).toBe(true)
+            expect(mockUpdateProduct).toHaveBeenCalledTimes(1)
+            const input = mockUpdateProduct.mock.calls[0][0]
+            expect(input.size).toBe("L")
+            expect(input.width).toBe(45.5)
+            expect(input.length).toBe(60)
+        })
+
+        it("parses empty measurements as null", async () => {
+            const formData = new FormData()
+            formData.set("id", "1")
+            formData.set("name", "Remera")
+            formData.set("size", "")
+            formData.set("width", "")
+            formData.set("length", "")
+
+            const result = await updateProductAction(formData)
+
+            expect(result.success).toBe(true)
+            const input = mockUpdateProduct.mock.calls[0][0]
+            expect(input.size).toBeNull()
+            expect(input.width).toBeNull()
+            expect(input.length).toBeNull()
+        })
+
+        it("rejects size longer than 50 characters", async () => {
+            const formData = new FormData()
+            formData.set("id", "1")
+            formData.set("name", "Remera")
+            formData.set("size", "a".repeat(51))
+
+            const result = await updateProductAction(formData)
+
+            expect(result.success).toBe(false)
+            expect(result.error).toMatch(/talle.*50 caracteres/i)
+            expect(mockUpdateProduct).not.toHaveBeenCalled()
+        })
+
+        it("rejects negative width", async () => {
+            const formData = new FormData()
+            formData.set("id", "1")
+            formData.set("name", "Remera")
+            formData.set("width", "-5")
+
+            const result = await updateProductAction(formData)
+
+            expect(result.success).toBe(false)
+            expect(result.error).toMatch(/ancho.*negativo/i)
+            expect(mockUpdateProduct).not.toHaveBeenCalled()
+        })
+
+        it("rejects negative length", async () => {
+            const formData = new FormData()
+            formData.set("id", "1")
+            formData.set("name", "Remera")
+            formData.set("length", "-10")
+
+            const result = await updateProductAction(formData)
+
+            expect(result.success).toBe(false)
+            expect(result.error).toMatch(/largo.*negativo/i)
+            expect(mockUpdateProduct).not.toHaveBeenCalled()
+        })
+    })
 })

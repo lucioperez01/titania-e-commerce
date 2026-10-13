@@ -124,6 +124,14 @@ export class ProductRepositoryMock implements ProductRepository {
         return products.filter(p => p.category === category)
     }
 
+    async findAvailableSizes(): Promise<string[]> {
+        const sizes = new Set<string>()
+        for (const p of products) {
+            if (p.size) sizes.add(p.size)
+        }
+        return Array.from(sizes).sort()
+    }
+
 }
 
 

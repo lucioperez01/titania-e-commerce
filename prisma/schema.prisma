@@ -117,9 +117,13 @@ model Product {
   isDeleted     Boolean   @default(false)
   deletedAt     DateTime?
   wishlistItems WishlistItem[]
+  size          String?
+  width         Float?
+  length        Float?
 
   @@index([categoryId])
   @@index([slug])
+  @@index([size])
 }
 
 model WishlistItem {

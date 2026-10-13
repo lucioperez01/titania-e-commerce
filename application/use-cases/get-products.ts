@@ -5,6 +5,7 @@ import { PrismaCategoriesRepository } from "@/infrastructure/repositories/Prisma
 export type GetProductsOptions = {
     onlyOnline?: boolean
     categorySlug?: string
+    sizes?: string[]
 }
 
 export async function getProducts(options?: GetProductsOptions): Promise<ProductDTO[]> {
@@ -21,7 +22,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     }
     
     const products = options?.onlyOnline
-        ? await repo.findAll({ isOnline: true, categoryId })
-        : await repo.findAll({ categoryId })
+        ? await repo.findAll({ isOnline: true, categoryId, sizes: options?.sizes })
+        : await repo.findAll({ categoryId, sizes: options?.sizes })
     return products.map(productToDTO)
 }

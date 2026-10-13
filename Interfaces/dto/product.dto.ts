@@ -17,6 +17,9 @@ export type ProductDTO = {
     brand: string
     stock: number
     isOnline: boolean
+    size?: string | null
+    width?: number | null
+    length?: number | null
 }
 
 export type ProductImageDTO = {
@@ -76,5 +79,8 @@ export function productToDTO(product: Product): ProductDTO {
         brand: product.brand,
         stock: product.stock,
         isOnline: product.isOnline ?? true,
+        size: product.size,
+        width: product.width,
+        length: product.length,
     }
 }

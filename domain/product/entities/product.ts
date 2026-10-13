@@ -22,6 +22,9 @@ type ProductProps = {
     gender?: string,
     measures?: string[],
     slug?: string,
+    size?: string | null,
+    width?: number | null,
+    length?: number | null,
 }
 
 
@@ -46,6 +49,9 @@ export class Product {
     public colors?: string[]
     public gender?: string
     public measures?: string[]
+    public size?: string | null
+    public width?: number | null
+    public length?: number | null
 
     constructor(
         props: ProductProps
@@ -71,6 +77,9 @@ export class Product {
         this.colors = props.colors
         this.gender = props.gender
         this.measures = props.measures
+        this.size = props.size
+        this.width = props.width
+        this.length = props.length
         this.slug = props.slug ?? Product.toSlug(props.name)
     }
 
@@ -114,6 +123,18 @@ export class Product {
 
         if (props.costPrice > props.price) {
             throw new Error("El precio de venta no puede ser menor al costo.")
+        }
+
+        if (props.size !== undefined && props.size !== null && props.size.length > 50) {
+            throw new Error("El talle debe tener 50 caracteres o menos.")
+        }
+
+        if (props.width !== undefined && props.width !== null && props.width < 0) {
+            throw new Error("El ancho no puede ser negativo.")
+        }
+
+        if (props.length !== undefined && props.length !== null && props.length < 0) {
+            throw new Error("El largo no puede ser negativo.")
         }
     }
 

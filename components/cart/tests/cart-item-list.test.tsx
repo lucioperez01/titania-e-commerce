@@ -117,4 +117,113 @@ describe("CartItemList", () => {
         )
         expect(screen.getByTestId("cart-total")).toHaveTextContent("$400.00")
     })
+
+    describe("size badge", () => {
+        it("shows size badge when product has size", () => {
+            const productsWithSize: ProductDTO[] = [
+                {
+                    ...mockProducts[0],
+                    size: "M",
+                },
+            ]
+            window.localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify([{ productId: 5, quantity: 1, variantId: null }])
+            )
+            render(
+                <CartProvider>
+                    <CartItemList products={productsWithSize} />
+                </CartProvider>
+            )
+            expect(screen.getByText("M")).toBeInTheDocument()
+        })
+
+        it("does not show size badge when product has null size", () => {
+            const productsWithoutSize: ProductDTO[] = [
+                {
+                    ...mockProducts[0],
+                    size: null,
+                },
+            ]
+            window.localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify([{ productId: 5, quantity: 1, variantId: null }])
+            )
+            render(
+                <CartProvider>
+                    <CartItemList products={productsWithoutSize} />
+                </CartProvider>
+            )
+            expect(screen.getByText("Product A")).toBeInTheDocument()
+            expect(screen.queryByText("M")).not.toBeInTheDocument()
+            expect(screen.queryByText("S")).not.toBeInTheDocument()
+            expect(screen.queryByText("L")).not.toBeInTheDocument()
+        })
+
+        it("does not show size badge when product has undefined size", () => {
+            const productsWithUndefinedSize: ProductDTO[] = [
+                {
+                    ...mockProducts[0],
+                    size: undefined,
+                },
+            ]
+            window.localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify([{ productId: 5, quantity: 1, variantId: null }])
+            )
+            render(
+                <CartProvider>
+                    <CartItemList products={productsWithUndefinedSize} />
+                </CartProvider>
+            )
+            expect(screen.getByText("Product A")).toBeInTheDocument()
+            expect(screen.queryByText("M")).not.toBeInTheDocument()
+        })
+
+        it("shows custom size badge", () => {
+            const productsWithCustomSize: ProductDTO[] = [
+                {
+                    ...mockProducts[0],
+                    size: "Custom Fit",
+                },
+            ]
+            window.localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify([{ productId: 5, quantity: 1, variantId: null }])
+            )
+            render(
+                <CartProvider>
+                    <CartItemList products={productsWithCustomSize} />
+                </CartProvider>
+            )
+            expect(screen.getByText("Custom Fit")).toBeInTheDocument()
+        })
+
+        it("shows size badge for multiple products with different sizes", () => {
+            const productsWithSizes: ProductDTO[] = [
+                {
+                    ...mockProducts[0],
+                    size: "M",
+                },
+                {
+                    ...mockProducts[1],
+                    size: "L",
+                },
+            ]
+            window.localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify([
+                    { productId: 5, quantity: 1, variantId: null },
+                    { productId: 8, quantity: 1, variantId: null },
+                ])
+            )
+            render(
+                <CartProvider>
+                    <CartItemList products={productsWithSizes} />
+                </CartProvider>
+            )
+            expect(screen.getByText("M")).toBeInTheDocument()
+            expect(screen.getByText("L")).toBeInTheDocument()
+        })
+    })
 })

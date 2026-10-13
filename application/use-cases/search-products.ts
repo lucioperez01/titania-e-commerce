@@ -1,15 +1,26 @@
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import { prisma } from "@/infrastructure/db/prismaClient"
 
-export async function searchProducts(query: string, limit = 20): Promise<ProductDTO[]> {
+export async function searchProducts(query: string, limit = 20, sizes?: string[]): Promise<ProductDTO[]> {
     if (!query || query.trim().length < 2) return []
 
+    const where: {
+        isDeleted: boolean
+        isOnline: boolean
+        name: { contains: string; mode: "insensitive" }
+        size?: { in: string[] }
+    } = {
+        isDeleted: false,
+        isOnline: true,
+        name: { contains: query.trim(), mode: "insensitive" },
+    }
+
+    if (sizes && sizes.length > 0) {
+        where.size = { in: sizes }
+    }
+
     const rawProducts = await prisma.product.findMany({
-        where: {
-            isDeleted: false,
-            isOnline: true,
-            name: { contains: query.trim(), mode: "insensitive" },
-        },
+        where,
         include: { category: true, images: true },
         take: limit,
         orderBy: { name: "asc" },
@@ -36,5 +47,8 @@ export async function searchProducts(query: string, limit = 20): Promise<Product
         brand: p.brand ?? "",
         stock: p.stock,
         isOnline: p.isOnline ?? true,
+        size: p.size ?? undefined,
+        width: p.width ?? undefined,
+        length: p.length ?? undefined,
     }))
 }

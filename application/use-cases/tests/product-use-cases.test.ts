@@ -255,4 +255,207 @@ describe("product use cases", () => {
             expect(mockDeleteProduct).toHaveBeenCalledWith(1)
         })
     })
+
+    describe("createProduct with measurements", () => {
+        it("passes size, width, and length to Product entity", async () => {
+            mockFindCategoryById.mockResolvedValue(category)
+
+            const input: CreateProductInput = {
+                name: "Remera",
+                price: 25000,
+                stock: 10,
+                categoryId: 1,
+                images: ["https://example.com/1.jpg"],
+                size: "M",
+                width: 50.5,
+                length: 70.2,
+            }
+
+            await createProduct(input)
+
+            expect(mockAddProduct).toHaveBeenCalledTimes(1)
+            const created = mockAddProduct.mock.calls[0][0]
+            expect(created.size).toBe("M")
+            expect(created.width).toBe(50.5)
+            expect(created.length).toBe(70.2)
+        })
+
+        it("passes null measurements to Product entity", async () => {
+            mockFindCategoryById.mockResolvedValue(category)
+
+            const input: CreateProductInput = {
+                name: "Remera",
+                price: 25000,
+                stock: 10,
+                categoryId: 1,
+                images: ["https://example.com/1.jpg"],
+                size: null,
+                width: null,
+                length: null,
+            }
+
+            await createProduct(input)
+
+            const created = mockAddProduct.mock.calls[0][0]
+            expect(created.size).toBeNull()
+            expect(created.width).toBeNull()
+            expect(created.length).toBeNull()
+        })
+
+        it("rejects negative width", async () => {
+            mockFindCategoryById.mockResolvedValue(category)
+
+            await expect(
+                createProduct({
+                    name: "Remera",
+                    price: 100,
+                    stock: 1,
+                    categoryId: 1,
+                    images: ["https://example.com/1.jpg"],
+                    width: -5,
+                })
+            ).rejects.toThrow(/ancho.*negativo/i)
+
+            expect(mockAddProduct).not.toHaveBeenCalled()
+        })
+
+        it("rejects negative length", async () => {
+            mockFindCategoryById.mockResolvedValue(category)
+
+            await expect(
+                createProduct({
+                    name: "Remera",
+                    price: 100,
+                    stock: 1,
+                    categoryId: 1,
+                    images: ["https://example.com/1.jpg"],
+                    length: -10,
+                })
+            ).rejects.toThrow(/largo.*negativo/i)
+
+            expect(mockAddProduct).not.toHaveBeenCalled()
+        })
+
+        it("rejects size longer than 50 characters", async () => {
+            mockFindCategoryById.mockResolvedValue(category)
+
+            await expect(
+                createProduct({
+                    name: "Remera",
+                    price: 100,
+                    stock: 1,
+                    categoryId: 1,
+                    images: ["https://example.com/1.jpg"],
+                    size: "a".repeat(51),
+                })
+            ).rejects.toThrow(/talle.*50 caracteres/i)
+
+            expect(mockAddProduct).not.toHaveBeenCalled()
+        })
+    })
+
+    describe("updateProduct with measurements", () => {
+        it("passes size, width, and length to Product entity", async () => {
+            const existing = {
+                id: 1,
+                name: "Remera",
+                slug: "remera",
+                price: 25000,
+                costPrice: 25000,
+                stock: 10,
+                weight: 1,
+                images: [new ProductImage(1, "url", 1)],
+                category,
+                desc: "Descripción",
+                brand: "Marca",
+                size: "S",
+                width: 40,
+                length: 60,
+            }
+            mockFindProductById.mockResolvedValue(existing)
+
+            const input: UpdateProductInput = {
+                id: 1,
+                size: "L",
+                width: 50.5,
+                length: 70.2,
+            }
+
+            await updateProduct(input)
+
+            const updated = mockUpdateProduct.mock.calls[0][0]
+            expect(updated.size).toBe("L")
+            expect(updated.width).toBe(50.5)
+            expect(updated.length).toBe(70.2)
+        })
+
+        it("clears measurements when set to null", async () => {
+            const existing = {
+                id: 1,
+                name: "Remera",
+                slug: "remera",
+                price: 25000,
+                costPrice: 25000,
+                stock: 10,
+                weight: 1,
+                images: [new ProductImage(1, "url", 1)],
+                category,
+                desc: "Descripción",
+                brand: "Marca",
+                size: "M",
+                width: 50,
+                length: 70,
+            }
+            mockFindProductById.mockResolvedValue(existing)
+
+            const input: UpdateProductInput = {
+                id: 1,
+                size: null,
+                width: null,
+                length: null,
+            }
+
+            await updateProduct(input)
+
+            const updated = mockUpdateProduct.mock.calls[0][0]
+            expect(updated.size).toBeNull()
+            expect(updated.width).toBeNull()
+            expect(updated.length).toBeNull()
+        })
+    })
+
+    describe("getProducts with size filter", () => {
+        it("passes sizes filter to repository", async () => {
+            mockFindAllProducts.mockResolvedValue([])
+
+            await getProducts({ sizes: ["M", "L"] })
+
+            expect(mockFindAllProducts).toHaveBeenCalledWith({
+                categoryId: undefined,
+                sizes: ["M", "L"],
+            })
+        })
+
+        it("passes sizes filter with onlyOnline option", async () => {
+            mockFindAllProducts.mockResolvedValue([])
+
+            await getProducts({ onlyOnline: true, sizes: ["S"] })
+
+            expect(mockFindAllProducts).toHaveBeenCalledWith({
+                isOnline: true,
+                categoryId: undefined,
+                sizes: ["S"],
+            })
+        })
+
+        it("does not pass sizes when not provided", async () => {
+            mockFindAllProducts.mockResolvedValue([])
+
+            await getProducts({ onlyOnline: true })
+
+            expect(mockFindAllProducts).toHaveBeenCalledWith({
+                isOnline: true,
+            })
+        })
+    })
 })

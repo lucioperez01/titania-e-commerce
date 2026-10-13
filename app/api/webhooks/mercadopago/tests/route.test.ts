@@ -42,6 +42,11 @@ jest.mock("mercadopago", () => ({
   Payment: MockPayment,
 }));
 
+const mockSendOrderEmailAsync = jest.fn();
+jest.mock("@/lib/email/send-order-emails", () => ({
+  sendOrderEmailAsync: mockSendOrderEmailAsync,
+}));
+
 import { POST } from "../route";
 
 const validWebhookBody = {
@@ -92,6 +97,16 @@ beforeEach(() => {
 
 describe("Webhook Handler POST", () => {
   describe("signature validation", () => {
+    const originalEnv = process.env.NODE_ENV;
+
+    beforeEach(() => {
+      process.env.NODE_ENV = "production";
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv;
+    });
+
     it("should return 401 if signature validation fails", async () => {
       mockValidate.mockImplementation(() => {
         throw new Error("Invalid signature");
@@ -296,6 +311,53 @@ describe("Webhook Handler POST", () => {
 
       expect(response.status).toBe(200);
     });
+
+    it("should send email when payment is approved", async () => {
+      mockPaymentGet.mockResolvedValue(mockPaymentResponse);
+      // First call: find order for processing
+      // Second call: find order with address for email
+      mockOrderFindUnique
+        .mockResolvedValueOnce({
+          id: 42,
+          status: "RESERVED",
+          items: [],
+        })
+        .mockResolvedValueOnce({
+          id: 42,
+          status: "PAID",
+          email: "customer@example.com",
+          fullName: "John Doe",
+          total: 1500,
+          items: [
+            {
+              product: { name: "Test Product" },
+              quantity: 2,
+              price: 750,
+            },
+          ],
+          shippingAddress: {
+            line1: "Calle Falsa 123",
+            line2: null,
+            city: "Buenos Aires",
+            province: "CABA",
+            postalCode: "1234",
+            country: "AR",
+          },
+        });
+      mockTransitionExecute.mockResolvedValue({});
+
+      await POST(createValidRequest());
+
+      expect(mockSendOrderEmailAsync).toHaveBeenCalledWith(
+        "order.paid",
+        expect.objectContaining({
+          orderNumber: 42,
+          customerEmail: "customer@example.com",
+          customerName: "John Doe",
+          total: 1500,
+        })
+      );
+    });
   });
 
   describe("error handling", () => {
@@ -322,6 +384,307 @@ describe("Webhook Handler POST", () => {
       const response = await POST(createValidRequest());
 
       expect(response.status).toBe(500);
+    });
+
+    it("should return 500 if MP_ACCESS_TOKEN is not configured", async () => {
+      delete process.env.MP_ACCESS_TOKEN;
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+
+      const response = await POST(createValidRequest());
+
+      expect(response.status).toBe(500);
+      const json = await response.json();
+      expect(json.error).toBe("Processing failed");
+    });
+
+    it("should return 500 if external_reference is not a number", async () => {
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockPaymentGet.mockResolvedValue({
+        id: 98765,
+        status: "approved",
+        external_reference: "invalid-not-a-number",
+      });
+
+      const response = await POST(createValidRequest());
+
+      expect(response.status).toBe(500);
+    });
+  });
+
+  describe("legacy webhook format (query params)", () => {
+    it("should handle legacy format with topic=payment&id=123", async () => {
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockPaymentGet.mockResolvedValue(mockPaymentResponse);
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      const request = new Request(
+        "http://localhost/api/webhooks/mercadopago?topic=payment&id=98765",
+        {
+          method: "POST",
+          headers: {
+            "x-signature": "valid-signature-here",
+            "x-request-id": "req-abc123",
+          },
+          body: JSON.stringify({ data: { id: 98765 } }),
+        }
+      );
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(200);
+      expect(mockPaymentGet).toHaveBeenCalledWith({ id: "98765" });
+    });
+
+    it("should handle legacy format with data.id in query params", async () => {
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockPaymentGet.mockResolvedValue(mockPaymentResponse);
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      const request = new Request(
+        "http://localhost/api/webhooks/mercadopago?topic=payment&data.id=98765",
+        {
+          method: "POST",
+          headers: {
+            "x-signature": "valid-signature-here",
+            "x-request-id": "req-abc123",
+          },
+          body: JSON.stringify({ data: { id: 98765 } }),
+        }
+      );
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe("idempotency", () => {
+    it("should not transition if order is already in target status", async () => {
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockPaymentGet.mockResolvedValue(mockPaymentResponse);
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "PAID", // Already PAID
+        items: [],
+      });
+
+      const response = await POST(createValidRequest());
+
+      expect(response.status).toBe(200);
+      expect(mockTransitionExecute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("additional payment status mappings", () => {
+    beforeEach(() => {
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockLogUpdate.mockResolvedValue({});
+    });
+
+    it("should transition authorized → PAID", async () => {
+      mockPaymentGet.mockResolvedValue({
+        ...mockPaymentResponse,
+        status: "authorized",
+      });
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      await POST(createValidRequest());
+
+      expect(mockTransitionExecute).toHaveBeenCalledWith({
+        orderId: 42,
+        newStatus: "PAID",
+        trigger: "webhook",
+        paymentId: "98765",
+        reason: "MercadoPago payment.updated — status: authorized",
+      });
+    });
+
+    it("should transition cancelled → CANCELLED", async () => {
+      mockPaymentGet.mockResolvedValue({
+        ...mockPaymentResponse,
+        status: "cancelled",
+      });
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      await POST(createValidRequest());
+
+      expect(mockTransitionExecute).toHaveBeenCalledWith({
+        orderId: 42,
+        newStatus: "CANCELLED",
+        trigger: "webhook",
+        paymentId: "98765",
+        reason: "MercadoPago payment.updated — status: cancelled",
+      });
+    });
+
+    it("should transition refunded → REFUNDED", async () => {
+      mockPaymentGet.mockResolvedValue({
+        ...mockPaymentResponse,
+        status: "refunded",
+      });
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "PAID",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      await POST(createValidRequest());
+
+      expect(mockTransitionExecute).toHaveBeenCalledWith({
+        orderId: 42,
+        newStatus: "REFUNDED",
+        trigger: "webhook",
+        paymentId: "98765",
+        reason: "MercadoPago payment.updated — status: refunded",
+      });
+    });
+
+    it("should transition charged_back → REFUNDED", async () => {
+      mockPaymentGet.mockResolvedValue({
+        ...mockPaymentResponse,
+        status: "charged_back",
+      });
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "PAID",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      await POST(createValidRequest());
+
+      expect(mockTransitionExecute).toHaveBeenCalledWith({
+        orderId: 42,
+        newStatus: "REFUNDED",
+        trigger: "webhook",
+        paymentId: "98765",
+        reason: "MercadoPago payment.updated — status: charged_back",
+      });
+    });
+
+    it("should not transition for in_process status", async () => {
+      mockPaymentGet.mockResolvedValue({
+        ...mockPaymentResponse,
+        status: "in_process",
+      });
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+
+      const response = await POST(createValidRequest());
+
+      expect(response.status).toBe(200);
+      expect(mockTransitionExecute).not.toHaveBeenCalled();
+    });
+
+    it("should not transition for in_mediation status", async () => {
+      mockPaymentGet.mockResolvedValue({
+        ...mockPaymentResponse,
+        status: "in_mediation",
+      });
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+
+      const response = await POST(createValidRequest());
+
+      expect(response.status).toBe(200);
+      expect(mockTransitionExecute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("merchant_order events", () => {
+    it("should skip merchant_order events without error", async () => {
+      mockValidate.mockReturnValue(undefined);
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockLogUpdate.mockResolvedValue({});
+
+      const merchantOrderBody = {
+        id: "evt-125",
+        action: "merchant_order",
+        data: { id: 98765 },
+      };
+
+      const response = await POST(createRequestWithHeaders(merchantOrderBody, {
+        "x-signature": "valid-signature-here",
+        "x-request-id": "req-abc123",
+      }));
+
+      expect(response.status).toBe(200);
+      expect(mockPaymentGet).not.toHaveBeenCalled();
+      expect(mockTransitionExecute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("development mode", () => {
+    it("should skip signature validation in development", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+      delete process.env.MP_WEBHOOK_SECRET;
+
+      mockFindFirst.mockResolvedValue(null);
+      mockLogCreate.mockResolvedValue({ id: 1 });
+      mockPaymentGet.mockResolvedValue(mockPaymentResponse);
+      mockOrderFindUnique.mockResolvedValue({
+        id: 42,
+        status: "RESERVED",
+        items: [],
+      });
+      mockTransitionExecute.mockResolvedValue({});
+
+      const request = new Request("http://localhost/api/webhooks/mercadopago", {
+        method: "POST",
+        headers: {
+          "x-signature": "any-signature",
+          "x-request-id": "req-abc123",
+        },
+        body: JSON.stringify(validWebhookBody),
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(200);
+      expect(mockValidate).not.toHaveBeenCalled();
+
+      process.env.NODE_ENV = originalEnv;
     });
   });
 });

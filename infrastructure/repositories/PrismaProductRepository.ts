@@ -6,12 +6,15 @@ import { Category } from "@/domain/product/entities/category"
 export class PrismaProductRepository implements ProductRepository {
 
     async findAll(options?: FindAllOptions): Promise<Product[]> {
-        const where: { isDeleted: boolean; isOnline?: boolean; categoryId?: number } = { isDeleted: false }
+        const where: { isDeleted: boolean; isOnline?: boolean; categoryId?: number; size?: { in: string[] } } = { isDeleted: false }
         if (options?.isOnline) {
             where.isOnline = true
         }
         if (options?.categoryId) {
             where.categoryId = options.categoryId
+        }
+        if (options?.sizes && options.sizes.length > 0) {
+            where.size = { in: options.sizes }
         }
         const products = await prisma.product.findMany({
             where,
@@ -37,6 +40,9 @@ export class PrismaProductRepository implements ProductRepository {
             rating: data.rating,
             sold: data.sold,
             isOnline: data.isOnline ?? true,
+            size: data.size ?? undefined,
+            width: data.width ?? undefined,
+            length: data.length ?? undefined,
         })
     }
 
@@ -51,6 +57,9 @@ export class PrismaProductRepository implements ProductRepository {
             stock: product.stock,
             weight: product.weight,
             brand: product.brand,
+            size: product.size ?? null,
+            width: product.width ?? null,
+            length: product.length ?? null,
             category: {
                 connect: { id: product.category.id }
             }
@@ -78,6 +87,9 @@ export class PrismaProductRepository implements ProductRepository {
             stock: product.stock,
             weight: product.weight,
             brand: product.brand,
+            size: product.size ?? null,
+            width: product.width ?? null,
+            length: product.length ?? null,
             category: {
                 connect: { id: product.category.id }
             }
@@ -147,6 +159,21 @@ export class PrismaProductRepository implements ProductRepository {
                 data: this.mapToUpdateEntity(product)
             })
         }
+    }
+
+    async findAvailableSizes(): Promise<string[]> {
+        const result = await prisma.product.findMany({
+            where: {
+                isDeleted: false,
+                size: { not: null },
+            },
+            select: { size: true },
+            distinct: ['size'],
+        })
+        return result
+            .map(p => p.size)
+            .filter((s): s is string => s != null && s !== "")
+            .sort()
     }
 
 

@@ -24,6 +24,21 @@ function parseString(value: FormDataEntryValue | null): string | undefined {
     return text === "" ? undefined : text
 }
 
+function parseNullableString(value: FormDataEntryValue | null): string | null | undefined {
+    if (value == null) return undefined
+    const text = String(value).trim()
+    return text === "" ? null : text
+}
+
+function parseNullableNumber(value: FormDataEntryValue | null): number | null | undefined {
+    if (value == null) return undefined
+    const str = String(value).trim()
+    if (str === "") return null
+    const parsed = Number(str)
+    if (Number.isNaN(parsed)) return null
+    return parsed
+}
+
 function parseImageUrls(formData: FormData): string[] {
     return formData.getAll("image")
         .map(value => String(value).trim())
@@ -45,6 +60,14 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
         if (!categoryId) return { success: false, error: "Seleccioná una categoría." }
         if (images.length === 0) return { success: false, error: "La URL de la imagen es obligatoria." }
 
+        const size = parseNullableString(formData.get("size"))
+        const width = parseNullableNumber(formData.get("width"))
+        const length = parseNullableNumber(formData.get("length"))
+
+        if (size !== undefined && size !== null && size.length > 50) return { success: false, error: "El talle debe tener 50 caracteres o menos." }
+        if (width !== undefined && width !== null && width < 0) return { success: false, error: "El ancho no puede ser negativo." }
+        if (length !== undefined && length !== null && length < 0) return { success: false, error: "El largo no puede ser negativo." }
+
         const input: CreateProductInput = {
             name,
             price,
@@ -53,6 +76,9 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
             brand: parseString(formData.get("brand")),
             description: parseString(formData.get("description")),
             images,
+            size,
+            width,
+            length,
         }
 
         await createProduct(input)
@@ -76,6 +102,14 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
         if (price !== undefined && price <= 0) return { success: false, error: "El precio debe ser mayor a 0." }
         if (stock !== undefined && stock < 0) return { success: false, error: "El stock no puede ser negativo." }
 
+        const size = parseNullableString(formData.get("size"))
+        const width = parseNullableNumber(formData.get("width"))
+        const length = parseNullableNumber(formData.get("length"))
+
+        if (size !== undefined && size !== null && size.length > 50) return { success: false, error: "El talle debe tener 50 caracteres o menos." }
+        if (width !== undefined && width !== null && width < 0) return { success: false, error: "El ancho no puede ser negativo." }
+        if (length !== undefined && length !== null && length < 0) return { success: false, error: "El largo no puede ser negativo." }
+
         const input: UpdateProductInput = {
             id,
             name,
@@ -84,6 +118,9 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
             brand: parseString(formData.get("brand")),
             description: parseString(formData.get("description")),
             images,
+            size,
+            width,
+            length,
         }
 
         await updateProduct(input)

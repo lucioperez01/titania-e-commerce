@@ -12,6 +12,9 @@ export type CreateProductInput = {
     brand?: string
     description?: string
     images?: string[]
+    size?: string | null
+    width?: number | null
+    length?: number | null
 }
 
 export async function createProduct(input: CreateProductInput): Promise<void> {
@@ -44,6 +47,9 @@ export async function createProduct(input: CreateProductInput): Promise<void> {
         category,
         desc: input.description ?? input.name,
         brand: input.brand ?? input.name,
+        size: input.size,
+        width: input.width,
+        length: input.length,
     })
 
     const repo = new PrismaProductRepository()

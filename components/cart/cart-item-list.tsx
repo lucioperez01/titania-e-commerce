@@ -50,7 +50,14 @@ export default function CartItemList({ products }: CartItemListProps) {
                                         className="rounded-md object-cover"
                                     />
                                     <div className="min-w-0">
-                                        <p className="font-primary text-lg overflow-hidden whitespace-nowrap text-ellipsis">{product.name}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-primary text-lg overflow-hidden whitespace-nowrap text-ellipsis">{product.name}</p>
+                                            {product.size && (
+                                                <span className="shrink-0 inline-block rounded-md border border-purple-400/40 bg-purple-500/10 px-2 py-0.5 text-xs text-purple-200 font-primary">
+                                                    {product.size}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-200">
                                             <span>${product.price.toFixed(2)}</span>
                                             <span>· Cantidad {item.quantity}</span>

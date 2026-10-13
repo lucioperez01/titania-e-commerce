@@ -12,6 +12,9 @@ export type UpdateProductInput = {
     brand: string
     description: string
     images: string[]
+    size: string | null
+    width: number | null
+    length: number | null
 }>
 
 export async function updateProduct(input: UpdateProductInput): Promise<void> {
@@ -41,6 +44,9 @@ export async function updateProduct(input: UpdateProductInput): Promise<void> {
         rating: existing.rating,
         sold: existing.sold,
         oldPrice: existing.oldPrice,
+        size: input.size ?? null,
+        width: input.width ?? null,
+        length: input.length ?? null,
     })
 
     await repo.updateProduct(product)

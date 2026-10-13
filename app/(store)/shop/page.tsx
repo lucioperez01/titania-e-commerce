@@ -3,19 +3,38 @@ import { getProducts } from "@/application/use-cases/get-products"
 import { searchProducts } from "@/application/use-cases/search-products"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import { PrismaCategoriesRepository } from "@/infrastructure/repositories/PrismaCategoryRepository"
+import { PrismaProductRepository } from "@/infrastructure/repositories/PrismaProductRepository"
+import SizeFilter from "@/components/shop/size-filter"
+import { Suspense } from "react"
 import type { Metadata } from "next"
 
-export function generateMetadata({ searchParams }: { searchParams: Promise<{ category?: string; search?: string }> }): Metadata {
+type ShopSearchParams = {
+    category?: string
+    search?: string
+    size?: string | string[]
+}
+
+export function generateMetadata({ searchParams }: { searchParams: Promise<ShopSearchParams> }): Metadata {
     return {
         title: "Catálogo",
     };
 }
 
-export default async function Shop({ searchParams }: { searchParams: Promise<{ category?: string; search?: string }> }) {
-    const { category, search } = await searchParams
+function normalizeSizes(raw: string | string[] | undefined): string[] {
+    if (!raw) return []
+    return Array.isArray(raw) ? raw.filter(Boolean) : [raw]
+}
+
+export default async function Shop({ searchParams }: { searchParams: Promise<ShopSearchParams> }) {
+    const { category, search, size } = await searchParams
+    const sizes = normalizeSizes(size)
+
     const products: ProductDTO[] = search
-        ? await searchProducts(search)
-        : await getProducts({ onlyOnline: true, categorySlug: category })
+        ? await searchProducts(search, 20, sizes.length > 0 ? sizes : undefined)
+        : await getProducts({ onlyOnline: true, categorySlug: category, sizes: sizes.length > 0 ? sizes : undefined })
+
+    const productRepo = new PrismaProductRepository()
+    const availableSizes = await productRepo.findAvailableSizes()
     
     let categoryTitle = "¡Echa un vistazo a nuestros productos!"
     let categoryDescription: string | undefined
@@ -45,6 +64,12 @@ export default async function Shop({ searchParams }: { searchParams: Promise<{ c
                     </p>
                 )}
             </div>
+
+            {availableSizes.length > 0 && (
+                <Suspense>
+                    <SizeFilter availableSizes={availableSizes} />
+                </Suspense>
+            )}
 
             <div className="flex flex-col justify-items-center gap-10 ">
                 <div className=" flex flex-col justify-center items-center gap-8 lg:grid lg:grid-cols-2 ">

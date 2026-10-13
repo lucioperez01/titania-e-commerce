@@ -4,6 +4,7 @@ import { Category } from '../../entities/category'
 export type FindAllOptions = {
     isOnline?: boolean
     categoryId?: number
+    sizes?: string[]
 }
 
 export interface ProductRepository {
@@ -14,4 +15,5 @@ export interface ProductRepository {
     updateProduct(product: Product): Promise<void>
     deleteProduct(id: number): Promise<void>
     findByCategory(category: Category): Promise<Product[]>
+    findAvailableSizes(): Promise<string[]>
 }

@@ -75,6 +75,16 @@ export default async function ProductPage({
                             </p>
                         </div>
 
+                        {(product.size || product.width || product.length) && (
+                            <div className="border-t pt-2">
+                                <p className="text-sm text-slate-300 font-primary">
+                                    {product.size && `Talle: ${product.size}`}
+                                    {product.width && `${product.size ? " | " : ""}Ancho: ${product.width}cm`}
+                                    {product.length && `${(product.size || product.width) ? " | " : ""}Largo: ${product.length}cm`}
+                                </p>
+                            </div>
+                        )}
+
                         <div className="flex flex-col gap-3 mt-3">
                             <Link href="#">
                                 <Button variant="outline" className="w-full cursor-pointer text-black text-md font-light font-primary py-5">Comprar ahora</Button>
