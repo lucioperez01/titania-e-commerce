@@ -241,10 +241,13 @@ export async function checkoutWithMercadoPago(formData: {
   addressCountry?: string;
 }): Promise<CheckoutRedirectResult> {
   try {
+    console.log('[checkoutWithMercadoPago] Starting checkout process...');
+    
     const { auth } = await import("@/lib/auth");
     const session = await auth();
 
     if (!session?.user?.id) {
+      console.error('[checkoutWithMercadoPago] No session found');
       return { success: false, error: "Debe iniciar sesión para crear un pedido" };
     }
 
@@ -253,8 +256,11 @@ export async function checkoutWithMercadoPago(formData: {
     const cart = await cartRepository.findByUserId(userId);
 
     if (!cart || cart.items.length === 0) {
+      console.error('[checkoutWithMercadoPago] Cart is empty');
       return { success: false, error: "El carrito está vacío" };
     }
+
+    console.log('[checkoutWithMercadoPago] Cart found with items:', cart.items.length);
 
     // Idempotency check: look for a RESERVED order created within the last 5 seconds
     const recentOrder = await prisma.order.findFirst({
@@ -281,15 +287,18 @@ export async function checkoutWithMercadoPago(formData: {
 
     // Check feature flag
     if (process.env.PAYMENTS_ENABLED !== "true") {
+      console.error('[checkoutWithMercadoPago] PAYMENTS_ENABLED is not true');
       return { success: false, error: "Los pagos aún no están disponibles" };
     }
 
     // Create reserved order + MP preference
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) {
+      console.error('[checkoutWithMercadoPago] MP_ACCESS_TOKEN not configured');
       throw new Error("MercadoPago access token not configured");
     }
 
+    console.log('[checkoutWithMercadoPago] Creating reserved order...');
     const useCase = new CreateReservedOrder(accessToken);
     const result = await useCase.execute({
       userId,
@@ -303,6 +312,8 @@ export async function checkoutWithMercadoPago(formData: {
       addressCountry: formData.addressCountry,
       cartId: cart.id,
     });
+
+    console.log('[checkoutWithMercadoPago] Reserved order created:', result);
 
     // Determine if sandbox
     const isSandbox = process.env.MP_ACCESS_TOKEN?.startsWith("TEST-");

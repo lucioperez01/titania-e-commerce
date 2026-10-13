@@ -46,6 +46,8 @@ export default function CheckoutForm() {
     e.preventDefault();
     if (!session?.user?.id) return;
 
+    console.log('[Checkout] Form submitted', { fullName, phone, addressLine1, addressCity, addressProvince, addressPostalCode });
+
     startTransition(async () => {
       setMessage(null);
 
@@ -54,6 +56,8 @@ export default function CheckoutForm() {
         setMessage({ type: "error", text: consentResult.error ?? "Error al guardar preferencias." });
         return;
       }
+
+      console.log('[Checkout] Consent saved, calling checkoutWithMercadoPago...');
 
       const checkoutResult = await checkoutWithMercadoPago({
         fullName,
@@ -64,6 +68,8 @@ export default function CheckoutForm() {
         addressProvince,
         addressPostalCode,
       });
+
+      console.log('[Checkout] checkoutWithMercadoPago result:', checkoutResult);
 
       if (checkoutResult.success && checkoutResult.redirectUrl) {
         dispatch({ type: "CLEAR" });
