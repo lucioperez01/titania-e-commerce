@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
   description: "Indumentaria y accesorios de calidad accesible",
   icons: {
-    icon: '/favicon.png',
+    icon: '/favicon.jpg',
   },
 };
 
