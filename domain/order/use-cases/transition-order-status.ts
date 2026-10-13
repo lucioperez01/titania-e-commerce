@@ -120,21 +120,37 @@ export class TransitionOrderStatus {
   ): Promise<void> {
     for (const item of items) {
       if (item.variantId) {
-        await tx.productVariant.update({
+        const updatedVariant = await tx.productVariant.update({
           where: { id: item.variantId },
           data: {
             stock: { decrement: item.quantity },
             reservedStock: { decrement: item.quantity },
           },
         });
+        
+        // Si el stock de la variante llega a 0, desactivar el producto
+        if (updatedVariant.stock === 0) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { isOnline: false },
+          });
+        }
       } else {
-        await tx.product.update({
+        const updatedProduct = await tx.product.update({
           where: { id: item.productId },
           data: {
             stock: { decrement: item.quantity },
             reservedStock: { decrement: item.quantity },
           },
         });
+        
+        // Si el stock llega a 0, desactivar el producto
+        if (updatedProduct.stock === 0) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { isOnline: false },
+          });
+        }
       }
     }
   }
@@ -164,15 +180,31 @@ export class TransitionOrderStatus {
   ): Promise<void> {
     for (const item of items) {
       if (item.variantId) {
-        await tx.productVariant.update({
+        const updatedVariant = await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stock: { increment: item.quantity } },
         });
+        
+        // Si el stock de la variante vuelve a ser > 0, reactivar el producto
+        if (updatedVariant.stock > 0) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { isOnline: true },
+          });
+        }
       } else {
-        await tx.product.update({
+        const updatedProduct = await tx.product.update({
           where: { id: item.productId },
           data: { stock: { increment: item.quantity } },
         });
+        
+        // Si el stock vuelve a ser > 0, reactivar el producto
+        if (updatedProduct.stock > 0) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { isOnline: true },
+          });
+        }
       }
     }
   }
