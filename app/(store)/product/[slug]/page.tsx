@@ -9,9 +9,13 @@ import ProductImageCarousel from "@/components/product/productImageCarousel"
 import { getProducts } from "@/application/use-cases/get-products"
 import type { Metadata } from "next"
 
-export function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Metadata {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params
+    const products = await getProducts()
+    const product = products.find(p => p.slug === slug)
+    
     return {
-        title: "Producto",
+        title: product?.name ?? "Producto",
     };
 }
 
