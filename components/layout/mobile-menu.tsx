@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, X, LayoutDashboard, Store, LogOut, Package } from "lucide-react"
+import { Menu, X, LayoutDashboard, Store, LogOut, Package, UserCircle } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { signOut } from "next-auth/react"
 
@@ -52,6 +52,14 @@ export default function MobileMenu({ categories, isAdmin, userEmail }: MobileMen
                 >
                   <Package className="w-4 h-4" />
                   Mis Pedidos
+                </Link>
+                <Link
+                  href="/account/profile"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 text-sm uppercase tracking-widest transition-colors font-secondary py-2 text-white/80 hover:text-white"
+                >
+                  <UserCircle className="w-4 h-4" />
+                  Perfil
                 </Link>
               {isAdmin && (
                 <Link
