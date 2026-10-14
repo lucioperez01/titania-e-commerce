@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useTransition, useMemo } from "react";
-import { saveConsent, checkoutWithMercadoPago, getOrderSummary } from "./actions";
+import { saveConsent, checkoutWithMercadoPago, getOrderSummary, getUserAddresses, type SavedAddress } from "./actions";
 import { useCart } from "@/components/cart/cart-provider";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LogIn } from "lucide-react";
+import { LogIn, MapPin, Plus } from "lucide-react";
 import { ProvinceSelect } from "@/components/checkout/province-select";
 import { calculateShippingCost, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping-zones";
 
@@ -17,6 +17,9 @@ export default function CheckoutForm() {
   const [isPending, startTransition] = useTransition();
   const [mailing, setMailing] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [useNewAddress, setUseNewAddress] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -27,6 +30,42 @@ export default function CheckoutForm() {
   const [orderSummary, setOrderSummary] = useState({ subtotal: 0, shippingCost: 0, total: 0, itemCount: 0 });
 
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Cargar direcciones guardadas
+  useEffect(() => {
+    if (session?.user?.id) {
+      getUserAddresses().then((addresses) => {
+        setSavedAddresses(addresses);
+        // Si tiene direcciones y ninguna está seleccionada, seleccionar la default
+        if (addresses.length > 0 && !selectedAddressId && !useNewAddress) {
+          const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
+          handleSelectAddress(defaultAddr);
+        }
+      });
+    }
+  }, [session?.user?.id]);
+
+  function handleSelectAddress(address: SavedAddress) {
+    setSelectedAddressId(address.id);
+    setUseNewAddress(false);
+    setFullName(address.fullName);
+    setPhone(address.phone);
+    setAddressLine1(address.line1);
+    setAddressCity(address.city);
+    setAddressProvince(address.province);
+    setAddressPostalCode(address.postalCode);
+  }
+
+  function handleUseNewAddress() {
+    setUseNewAddress(true);
+    setSelectedAddressId(null);
+    setFullName("");
+    setPhone("");
+    setAddressLine1("");
+    setAddressCity("");
+    setAddressProvince("");
+    setAddressPostalCode("");
+  }
 
   const calculatedShipping = useMemo(() => {
     if (!addressProvince) return null;
@@ -133,7 +172,65 @@ export default function CheckoutForm() {
           </div>
         )}
 
+        {/* Selector de direcciones guardadas */}
+        {savedAddresses.length > 0 && (
+          <div className="mt-6 space-y-3">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              Dirección de envío
+            </h3>
+            <div className="space-y-2">
+              {savedAddresses.map((address) => (
+                <label
+                  key={address.id}
+                  className={`flex items-start gap-3 rounded-lg border p-4 cursor-pointer transition ${
+                    selectedAddressId === address.id
+                      ? "border-purple-500 bg-purple-500/10"
+                      : "border-slate-200/10 bg-slate-800/30 hover:border-slate-200/20"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="address"
+                    checked={selectedAddressId === address.id && !useNewAddress}
+                    onChange={() => handleSelectAddress(address)}
+                    disabled={isPending}
+                    className="mt-1 h-4 w-4 rounded border-slate-200/10 text-purple-600 focus:ring-purple-500"
+                  />
+                  <div className="flex-1 text-sm">
+                    <p className="font-medium text-white">
+                      {address.fullName}
+                      {address.isDefault && (
+                        <span className="ml-2 text-xs text-purple-400">(Predeterminada)</span>
+                      )}
+                    </p>
+                    <p className="text-white/70 mt-1">{address.line1}</p>
+                    <p className="text-white/60 text-xs mt-1">
+                      {address.city}, {address.province} - CP {address.postalCode}
+                    </p>
+                    <p className="text-white/60 text-xs">Tel: {address.phone}</p>
+                  </div>
+                </label>
+              ))}
+              <button
+                type="button"
+                onClick={handleUseNewAddress}
+                className={`w-full flex items-center justify-center gap-2 rounded-lg border p-4 transition ${
+                  useNewAddress
+                    ? "border-purple-500 bg-purple-500/10 text-purple-400"
+                    : "border-slate-200/10 bg-slate-800/30 text-white/70 hover:border-slate-200/20"
+                }`}
+                disabled={isPending}
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">Usar nueva dirección</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          {/* Datos del destinatario (siempre visibles) */}
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-white/80">Nombre completo</label>
             <input
@@ -160,54 +257,59 @@ export default function CheckoutForm() {
             />
           </div>
 
-          <div>
-            <label htmlFor="addressLine1" className="block text-sm font-medium text-white/80">Dirección</label>
-            <input
-              id="addressLine1"
-              type="text"
-              required
-              value={addressLine1}
-              onChange={e => setAddressLine1(e.target.value)}
-              disabled={isPending}
-              className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-            />
-          </div>
+          {/* Dirección de envío (solo si no hay direcciones guardadas o se seleccionó nueva) */}
+          {(savedAddresses.length === 0 || useNewAddress) && (
+            <>
+              <div>
+                <label htmlFor="addressLine1" className="block text-sm font-medium text-white/80">Dirección</label>
+                <input
+                  id="addressLine1"
+                  type="text"
+                  required
+                  value={addressLine1}
+                  onChange={e => setAddressLine1(e.target.value)}
+                  disabled={isPending}
+                  className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="addressCity" className="block text-sm font-medium text-white/80">Ciudad</label>
-              <input
-                id="addressCity"
-                type="text"
-                required
-                value={addressCity}
-                onChange={e => setAddressCity(e.target.value)}
-                disabled={isPending}
-                className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="addressProvince" className="block text-sm font-medium text-white/80">Provincia</label>
-              <ProvinceSelect
-                value={addressProvince}
-                onChange={setAddressProvince}
-                disabled={isPending}
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="addressCity" className="block text-sm font-medium text-white/80">Ciudad</label>
+                  <input
+                    id="addressCity"
+                    type="text"
+                    required
+                    value={addressCity}
+                    onChange={e => setAddressCity(e.target.value)}
+                    disabled={isPending}
+                    className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="addressProvince" className="block text-sm font-medium text-white/80">Provincia</label>
+                  <ProvinceSelect
+                    value={addressProvince}
+                    onChange={setAddressProvince}
+                    disabled={isPending}
+                  />
+                </div>
+              </div>
 
-          <div>
-            <label htmlFor="addressPostalCode" className="block text-sm font-medium text-white/80">Código postal</label>
-            <input
-              id="addressPostalCode"
-              type="text"
-              required
-              value={addressPostalCode}
-              onChange={e => setAddressPostalCode(e.target.value)}
-              disabled={isPending}
-              className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-            />
-          </div>
+              <div>
+                <label htmlFor="addressPostalCode" className="block text-sm font-medium text-white/80">Código postal</label>
+                <input
+                  id="addressPostalCode"
+                  type="text"
+                  required
+                  value={addressPostalCode}
+                  onChange={e => setAddressPostalCode(e.target.value)}
+                  disabled={isPending}
+                  className="mt-1 w-full rounded-md border border-slate-200/10 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex items-start gap-3 rounded-md border border-slate-200/10 p-3">
             <input

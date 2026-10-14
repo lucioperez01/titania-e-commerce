@@ -34,6 +34,53 @@ export interface OrderSummary {
 
 const IDEMPOTENCY_WINDOW_MS = 5000; // 5 seconds
 
+export interface SavedAddress {
+  id: number;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  province: string;
+  postalCode: string;
+  isDefault: boolean;
+}
+
+export async function getUserAddresses(): Promise<SavedAddress[]> {
+  try {
+    const { auth } = await import("@/lib/auth");
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return [];
+    }
+
+    const userId = Number(session.user.id);
+    const addresses = await prisma.address.findMany({
+      where: { userId, isDeleted: false },
+      orderBy: [
+        { isDefault: "desc" },
+        { createdAt: "desc" },
+      ],
+    });
+
+    return addresses.map((addr) => ({
+      id: addr.id,
+      fullName: addr.fullName,
+      phone: addr.phone,
+      line1: addr.line1,
+      line2: addr.line2,
+      city: addr.city,
+      province: addr.province,
+      postalCode: addr.postalCode,
+      isDefault: addr.isDefault,
+    }));
+  } catch (error) {
+    console.error("getUserAddresses error:", error);
+    return [];
+  }
+}
+
 export async function getOrderSummary(province?: string): Promise<OrderSummary> {
   try {
     const { auth } = await import("@/lib/auth");
