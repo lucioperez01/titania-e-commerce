@@ -286,6 +286,7 @@ export async function checkoutWithMercadoPago(formData: {
   addressProvince: string;
   addressPostalCode: string;
   addressCountry?: string;
+  saveAddress?: boolean;
 }): Promise<CheckoutRedirectResult> {
   try {
     console.log('[checkoutWithMercadoPago] Starting checkout process...');
@@ -308,6 +309,24 @@ export async function checkoutWithMercadoPago(formData: {
     }
 
     console.log('[checkoutWithMercadoPago] Cart found with items:', cart.items.length);
+
+    // Guardar dirección nueva si corresponde
+    if (formData.saveAddress) {
+      await prisma.address.create({
+        data: {
+          userId,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          line1: formData.addressLine1,
+          city: formData.addressCity,
+          province: formData.addressProvince,
+          postalCode: formData.addressPostalCode,
+          country: formData.addressCountry ?? "AR",
+          isDefault: false,
+        },
+      });
+      console.log('[checkoutWithMercadoPago] New address saved');
+    }
 
     // Idempotency check: look for a RESERVED order created within the last 5 seconds
     const recentOrder = await prisma.order.findFirst({

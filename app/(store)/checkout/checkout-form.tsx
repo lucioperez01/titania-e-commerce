@@ -27,6 +27,7 @@ export default function CheckoutForm() {
   const [addressCity, setAddressCity] = useState("");
   const [addressProvince, setAddressProvince] = useState("");
   const [addressPostalCode, setAddressPostalCode] = useState("");
+  const [saveAddress, setSaveAddress] = useState(false);
   const [orderSummary, setOrderSummary] = useState({ subtotal: 0, shippingCost: 0, total: 0, itemCount: 0 });
 
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -106,6 +107,7 @@ export default function CheckoutForm() {
         addressCity,
         addressProvince,
         addressPostalCode,
+        saveAddress: useNewAddress && saveAddress,
       });
 
       console.log('[Checkout] checkoutWithMercadoPago result:', checkoutResult);
@@ -324,6 +326,23 @@ export default function CheckoutForm() {
               Recibir ofertas exclusivas y promociones por email
             </label>
           </div>
+
+          {/* Checkbox para guardar dirección nueva */}
+          {useNewAddress && (
+            <div className="flex items-start gap-3 rounded-md border border-slate-200/10 p-3">
+              <input
+                type="checkbox"
+                id="saveAddress"
+                checked={saveAddress}
+                onChange={(e) => setSaveAddress(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-200/10 text-purple-600 focus:ring-purple-500"
+                disabled={isPending}
+              />
+              <label htmlFor="saveAddress" className="text-sm text-white/70">
+                Guardar esta dirección para futuras compras
+              </label>
+            </div>
+          )}
 
           {session?.user?.email && (
             <p className="text-xs text-white/50">Pedido asociado a: {session.user.email}</p>
