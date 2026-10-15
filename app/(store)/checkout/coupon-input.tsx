@@ -23,8 +23,7 @@ export function CouponInput({ onCouponApplied, onCouponRemoved }: CouponInputPro
     promotionId?: number;
   } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateCoupon = () => {
     if (!couponCode.trim()) return;
 
     startTransition(async () => {
@@ -49,6 +48,13 @@ export function CouponInput({ onCouponApplied, onCouponRemoved }: CouponInputPro
         });
       }
     });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      validateCoupon();
+    }
   };
 
   const handleRemove = () => {
@@ -81,7 +87,7 @@ export function CouponInput({ onCouponApplied, onCouponRemoved }: CouponInputPro
   // Mostrar input para ingresar cupón
   return (
     <div className="space-y-2">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Ticket className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -89,12 +95,14 @@ export function CouponInput({ onCouponApplied, onCouponRemoved }: CouponInputPro
             placeholder="Código de cupón"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            onKeyDown={handleKeyDown}
             disabled={isPending}
             className="w-full rounded-md border border-slate-200/10 bg-slate-800/50 pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
           />
         </div>
         <button
-          type="submit"
+          type="button"
+          onClick={validateCoupon}
           disabled={isPending || !couponCode.trim()}
           className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
@@ -107,7 +115,7 @@ export function CouponInput({ onCouponApplied, onCouponRemoved }: CouponInputPro
             "Aplicar"
           )}
         </button>
-      </form>
+      </div>
       {result?.type === "error" && (
         <p className="text-sm text-red-400">{result.message}</p>
       )}
