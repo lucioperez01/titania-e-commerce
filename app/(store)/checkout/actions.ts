@@ -287,6 +287,9 @@ export async function checkoutWithMercadoPago(formData: {
   addressPostalCode: string;
   addressCountry?: string;
   saveAddress?: boolean;
+  couponCode?: string | null;
+  promotionId?: number | null;
+  discountAmount?: number;
 }): Promise<CheckoutRedirectResult> {
   try {
     console.log('[checkoutWithMercadoPago] Starting checkout process...');
@@ -377,6 +380,9 @@ export async function checkoutWithMercadoPago(formData: {
       addressPostalCode: formData.addressPostalCode,
       addressCountry: formData.addressCountry,
       cartId: cart.id,
+      couponCode: formData.couponCode,
+      promotionId: formData.promotionId,
+      discountAmount: formData.discountAmount,
     });
 
     console.log('[checkoutWithMercadoPago] Reserved order created:', result);

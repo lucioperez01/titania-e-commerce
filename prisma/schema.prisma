@@ -188,6 +188,10 @@ model Order {
   paymentId         String?
   preferenceId      String?
   paidAt            DateTime?
+  couponCode        String?
+  promotionId       Int?
+  promotion         Promotion?  @relation(fields: [promotionId], references: [id])
+  discountAmount    Decimal?    @db.Decimal(10,2)
   items             OrderItem[]
   shippingAddressId Int
   shippingAddress   Address     @relation(fields: [shippingAddressId], references: [id])
@@ -200,6 +204,7 @@ model Order {
   @@index([status])
   @@index([email])
   @@index([preferenceId])
+  @@index([promotionId])
 }
 
 model Address {
@@ -347,6 +352,7 @@ model Promotion {
 
   conditions PromotionCondition[]
   benefits   PromotionBenefit[]
+  orders     Order[]
 
   createdAt   DateTime @default(now())
 }

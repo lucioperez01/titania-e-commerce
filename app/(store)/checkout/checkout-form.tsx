@@ -9,6 +9,7 @@ import Link from "next/link";
 import { LogIn, MapPin, Plus } from "lucide-react";
 import { ProvinceSelect } from "@/components/checkout/province-select";
 import { calculateShippingCost, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping-zones";
+import { CouponInput } from "./coupon-input";
 
 export default function CheckoutForm() {
   const { state: cartState, dispatch } = useCart();
@@ -29,6 +30,9 @@ export default function CheckoutForm() {
   const [addressPostalCode, setAddressPostalCode] = useState("");
   const [saveAddress, setSaveAddress] = useState(false);
   const [orderSummary, setOrderSummary] = useState({ subtotal: 0, shippingCost: 0, total: 0, itemCount: 0 });
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [promotionId, setPromotionId] = useState<number | null>(null);
 
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -74,7 +78,7 @@ export default function CheckoutForm() {
   }, [addressProvince, orderSummary.subtotal]);
 
   const displayShipping = calculatedShipping ?? orderSummary.shippingCost;
-  const displayTotal = orderSummary.subtotal + displayShipping;
+  const displayTotal = orderSummary.subtotal + displayShipping - discountAmount;
 
   useEffect(() => {
     if (session?.user?.id && !cartState.isHydrating) {
@@ -108,6 +112,9 @@ export default function CheckoutForm() {
         addressProvince,
         addressPostalCode,
         saveAddress: useNewAddress && saveAddress,
+        couponCode,
+        promotionId,
+        discountAmount,
       });
 
       console.log('[Checkout] checkoutWithMercadoPago result:', checkoutResult);
@@ -348,6 +355,22 @@ export default function CheckoutForm() {
             <p className="text-xs text-white/50">Pedido asociado a: {session.user.email}</p>
           )}
 
+          {/* Cupón de descuento */}
+          <div className="mt-6">
+            <CouponInput
+              onCouponApplied={(code, discount, promoId) => {
+                setCouponCode(code);
+                setDiscountAmount(discount);
+                setPromotionId(promoId);
+              }}
+              onCouponRemoved={() => {
+                setCouponCode(null);
+                setDiscountAmount(0);
+                setPromotionId(null);
+              }}
+            />
+          </div>
+
           <div className="mt-6 rounded-lg border border-slate-200/10 bg-slate-800/30 p-4">
             <h3 className="text-sm font-semibold text-white mb-3">Resumen del pedido</h3>
             <div className="space-y-2 text-sm">
@@ -359,6 +382,12 @@ export default function CheckoutForm() {
                 <span>Envío {addressProvince ? `a ${addressProvince}` : ""}</span>
                 <span>{displayShipping === 0 ? "Gratis" : `$${displayShipping.toLocaleString("es-AR")}`}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-green-400">
+                  <span>Descuento {couponCode && `(${couponCode})`}</span>
+                  <span>-${discountAmount.toLocaleString("es-AR")}</span>
+                </div>
+              )}
               {addressProvince && displayShipping === 0 && (
                 <p className="text-xs text-purple-400">
                   ¡Envío gratis en compras superiores a ${FREE_SHIPPING_THRESHOLD.toLocaleString("es-AR")}!

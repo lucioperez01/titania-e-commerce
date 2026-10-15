@@ -20,6 +20,9 @@ export interface ReservedOrderInput {
   addressPostalCode: string;
   addressCountry?: string;
   cartId: number;
+  couponCode?: string | null;
+  promotionId?: number | null;
+  discountAmount?: number;
 }
 
 export interface ReservedOrderResult {
@@ -114,7 +117,8 @@ export class CreateReservedOrder {
     }
 
     const shippingCost = calculateShippingCost(input.addressProvince, subtotal);
-    const total = subtotal + shippingCost;
+    const discountAmount = input.discountAmount || 0;
+    const total = subtotal + shippingCost - discountAmount;
 
     // 4. Create order + address + order items + stock reservation in a single transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -142,6 +146,9 @@ export class CreateReservedOrder {
           subtotal,
           total,
           shippingCost,
+          couponCode: input.couponCode,
+          promotionId: input.promotionId,
+          discountAmount,
           shippingAddressId: address.id,
           status: OrderStatus[OrderStatus.RESERVED] as "RESERVED",
           paymentProvider: "MERCADOPAGO",
