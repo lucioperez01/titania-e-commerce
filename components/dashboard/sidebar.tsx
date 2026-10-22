@@ -9,6 +9,7 @@ import {
     Package,
     Tags,
     Store,
+    Ticket,
     type LucideIcon,
 } from "lucide-react"
 
@@ -37,6 +38,7 @@ const navSections: NavSection[] = [
         items: [
             { label: "Productos", href: "/dashboard/products", icon: Package },
             { label: "Categorías", href: "/dashboard/categories", icon: Tags },
+            { label: "Promociones", href: "/dashboard/promotions", icon: Ticket },
         ],
     },
 ]
