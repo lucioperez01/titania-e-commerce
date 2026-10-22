@@ -29,10 +29,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) return null;
 
+        // Check if user should be admin
+        const adminEmails = process.env.ADMIN_EMAIL?.split(",") ?? [];
+        const role = adminEmails.includes(email) ? "ADMIN" : user.role;
+
         return {
           id: String(user.id),
           email: user.email,
-          role: user.role,
+          role,
         };
       },
     }),
