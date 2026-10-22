@@ -1,24 +1,46 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { loginAction, googleSignIn } from "./actions";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-transparent">
+          <div className="text-slate-300">Cargando...</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "";
+
   const [state, formAction] = useActionState(loginAction, null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset isSubmitting when there's an error or on initial render
+  // Reset submitting state once the action settles (success or error)
   useEffect(() => {
     if (state?.error || state === null) {
       setIsSubmitting(false);
     }
   }, [state]);
 
-  if (state?.success) {
-    window.location.href = "/";
-  }
+  // Client-side redirect after successful login.
+  // The server action returns the resolved URL (callbackUrl or role-based fallback).
+  useEffect(() => {
+    if (state?.success && state?.callbackUrl) {
+      window.location.href = state.callbackUrl;
+    }
+  }, [state]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent">
@@ -36,6 +58,10 @@ export default function LoginPage() {
           onSubmit={() => setIsSubmitting(true)}
           className="space-y-4"
         >
+          {callbackUrl && (
+            <input type="hidden" name="callbackUrl" value={callbackUrl} />
+          )}
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -75,6 +101,9 @@ export default function LoginPage() {
 
         <div className="mt-4">
           <form action={googleSignIn}>
+            {callbackUrl && (
+              <input type="hidden" name="callbackUrl" value={callbackUrl} />
+            )}
             <button
               type="submit"
               disabled={isSubmitting}
