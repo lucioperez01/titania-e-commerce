@@ -7,9 +7,14 @@ import { deleteProduct } from "@/application/use-cases/delete-product"
 import { createCategory, CreateCategoryInput } from "@/application/use-cases/create-category"
 import { updateCategory, UpdateCategoryInput } from "@/application/use-cases/update-category"
 import { deleteCategory } from "@/application/use-cases/delete-category"
+import { type CreatePromotionInput, type PromotionDTO } from "@/Interfaces/dto/promotion.dto"
+import { createPromotion } from "@/application/use-cases/create-promotion"
+import { updatePromotion, type UpdatePromotionInput } from "@/application/use-cases/update-promotion"
+import { deletePromotion } from "@/application/use-cases/delete-promotion"
+import { togglePromotion } from "@/application/use-cases/toggle-promotion"
 import { prisma } from "@/infrastructure/db/prismaClient"
 
-export type ActionResult = { success: boolean; error?: string }
+export type ActionResult<T = undefined> = { success: boolean; error?: string; data?: T }
 
 function parseNumber(value: FormDataEntryValue | null): number | undefined {
     if (value == null || value === "") return undefined
@@ -43,6 +48,19 @@ function parseImageUrls(formData: FormData): string[] {
     return formData.getAll("image")
         .map(value => String(value).trim())
         .filter(url => url !== "")
+}
+
+function parseJsonArray<T>(formData: FormData, key: string): T[] | undefined {
+    const value = formData.get(key)
+    if (value == null) return undefined
+    const str = String(value).trim()
+    if (str === "") return undefined
+    try {
+        const parsed = JSON.parse(str)
+        return Array.isArray(parsed) ? parsed : undefined
+    } catch {
+        return undefined
+    }
 }
 
 export async function createProductAction(formData: FormData): Promise<ActionResult> {
@@ -217,6 +235,141 @@ export async function deleteCategoryAction(id: number): Promise<ActionResult> {
         return { success: true }
     } catch (err) {
         const message = err instanceof Error ? err.message : "Error al eliminar la categoría."
+        return { success: false, error: message }
+    }
+}
+
+// ── Promotion Server Actions ─────────────────────────────────────────────────
+
+export async function createPromotionAction(formData: FormData): Promise<ActionResult<PromotionDTO>> {
+    try {
+        const name = parseString(formData.get("name")) ?? ""
+        const type = parseString(formData.get("type")) as "COUPON" | "AUTOMATIC" | undefined
+        const couponCode = parseString(formData.get("couponCode"))
+        const startsAt = parseString(formData.get("startsAt"))
+        const endsAt = parseString(formData.get("endsAt"))
+        const conditions = (parseJsonArray<CreatePromotionInput["conditions"][number]>(formData, "conditions")) ?? []
+        const benefits = (parseJsonArray<CreatePromotionInput["benefits"][number]>(formData, "benefits")) ?? []
+
+        // Server-side validation (defense in depth)
+        if (!name || name.trim().length < 3) {
+            return { success: false, error: "Name must have at least 3 characters." }
+        }
+        if (!type || !["COUPON", "AUTOMATIC"].includes(type)) {
+            return { success: false, error: "Invalid promotion type." }
+        }
+        if (type === "COUPON" && !couponCode) {
+            return { success: false, error: "Coupon code is required for coupon promotions." }
+        }
+        if (startsAt && endsAt && new Date(endsAt) <= new Date(startsAt)) {
+            return { success: false, error: "End date must be after start date." }
+        }
+        if (benefits.length === 0) {
+            return { success: false, error: "At least one discount benefit is required." }
+        }
+        for (const b of benefits) {
+            if (!["PERCENTAGE", "FIXED"].includes(b.discountType)) {
+                return { success: false, error: "Invalid discount type." }
+            }
+            if (typeof b.value !== "number" || b.value <= 0) {
+                return { success: false, error: "Benefit value must be greater than 0." }
+            }
+        }
+
+        const input: CreatePromotionInput = {
+            name: name.trim(),
+            type,
+            couponCode,
+            startsAt: startsAt ?? null,
+            endsAt: endsAt ?? null,
+            conditions,
+            benefits,
+        }
+
+        const data = await createPromotion(input)
+        revalidatePath("/dashboard/promotions")
+        return { success: true, data }
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Error creating promotion."
+        return { success: false, error: message }
+    }
+}
+
+export async function updatePromotionAction(id: number, formData: FormData): Promise<ActionResult<PromotionDTO>> {
+    try {
+        const name = parseString(formData.get("name"))
+        const type = parseString(formData.get("type")) as "COUPON" | "AUTOMATIC" | undefined
+        const couponCode = parseNullableString(formData.get("couponCode"))
+        const startsAt = parseNullableString(formData.get("startsAt"))
+        const endsAt = parseNullableString(formData.get("endsAt"))
+        const conditions = parseJsonArray<UpdatePromotionInput["conditions"] extends (infer U)[] | undefined ? U : never>(formData, "conditions")
+        const benefits = parseJsonArray<UpdatePromotionInput["benefits"] extends (infer U)[] | undefined ? U : never>(formData, "benefits")
+
+        // Server-side validation (only validate provided fields)
+        if (name !== undefined && name.trim().length < 3) {
+            return { success: false, error: "Name must have at least 3 characters." }
+        }
+        if (type !== undefined && !["COUPON", "AUTOMATIC"].includes(type)) {
+            return { success: false, error: "Invalid promotion type." }
+        }
+        if (type === "COUPON" && couponCode !== undefined && !couponCode) {
+            return { success: false, error: "Coupon code is required for coupon promotions." }
+        }
+        if (startsAt && endsAt && new Date(endsAt) <= new Date(startsAt)) {
+            return { success: false, error: "End date must be after start date." }
+        }
+        if (benefits !== undefined && benefits.length === 0) {
+            return { success: false, error: "At least one discount benefit is required." }
+        }
+        if (benefits) {
+            for (const b of benefits) {
+                if (!["PERCENTAGE", "FIXED"].includes(b.discountType)) {
+                    return { success: false, error: "Invalid discount type." }
+                }
+                if (typeof b.value !== "number" || b.value <= 0) {
+                    return { success: false, error: "Benefit value must be greater than 0." }
+                }
+            }
+        }
+
+        const input: UpdatePromotionInput = {
+            id,
+            name: name?.trim(),
+            type,
+            couponCode,
+            startsAt,
+            endsAt,
+            conditions,
+            benefits,
+        }
+
+        const data = await updatePromotion(input)
+        revalidatePath("/dashboard/promotions")
+        return { success: true, data }
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Error updating promotion."
+        return { success: false, error: message }
+    }
+}
+
+export async function deletePromotionAction(id: number): Promise<ActionResult> {
+    try {
+        await deletePromotion(id)
+        revalidatePath("/dashboard/promotions")
+        return { success: true }
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Error deleting promotion."
+        return { success: false, error: message }
+    }
+}
+
+export async function togglePromotionAction(id: number): Promise<ActionResult<PromotionDTO>> {
+    try {
+        const data = await togglePromotion(id)
+        revalidatePath("/dashboard/promotions")
+        return { success: true, data }
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Error toggling promotion."
         return { success: false, error: message }
     }
 }
