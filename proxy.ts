@@ -10,7 +10,13 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ 
+    req, 
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName: process.env.NODE_ENV === "production" 
+      ? "__Secure-next-auth.session-token" 
+      : "next-auth.session-token"
+  });
 
   if (!token) {
     // Unauthenticated → redirect to login with callbackUrl
