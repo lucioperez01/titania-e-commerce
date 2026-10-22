@@ -1,41 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
-export async function proxy(req: NextRequest) {
+export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Only protect /dashboard routes — prevent redirect loops
-  // /login, /register, and / are never redirected by middleware
-  if (!pathname.startsWith("/dashboard")) {
-    return NextResponse.next();
-  }
-
-  const token = await getToken({ 
-    req, 
-    secret: process.env.NEXTAUTH_SECRET,
-    cookieName: process.env.NODE_ENV === "production" 
-      ? "__Secure-next-auth.session-token" 
-      : "next-auth.session-token"
-  });
-
-  if (!token) {
-    // Unauthenticated → redirect to login with callbackUrl
-    // Avoid loop: /login is not under /dashboard, so this is safe
+  // auth() wrapper resolves session cookies automatically (dev + prod).
+  // No hardcoded cookie names needed — Auth.js v5 handles it.
+  if (!req.auth) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = (token as { role?: string }).role;
+  const role = (req.auth.user as { role?: string } | undefined)?.role;
 
   if (role !== "ADMIN") {
-    // Authenticated but not admin → redirect to storefront
-    // Avoid loop: / is not under /dashboard, so this is safe
     return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/dashboard/:path*"],

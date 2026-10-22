@@ -1,17 +1,15 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/infrastructure/db/prismaClient";
 import bcrypt from "bcrypt";
+import { authConfig } from "@/auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...authConfig.providers,
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -29,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) return null;
 
-        // Check if user should be admin
+        // Promote to ADMIN if email matches ADMIN_EMAIL env var
         const adminEmails = process.env.ADMIN_EMAIL?.split(",") ?? [];
         const role = adminEmails.includes(email) ? "ADMIN" : user.role;
 
@@ -73,7 +71,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       const adminEmails = process.env.ADMIN_EMAIL?.split(",") ?? [];
 
-      // Admin auto-promotion
+      // Admin auto-promotion on sign-in
       if (adminEmails.includes(user.email)) {
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email },
@@ -97,12 +95,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const role = adminEmails.includes(user.email) ? "ADMIN" : "USER";
-        
+
         // Extract firstName and lastName from Google's full name
         const nameParts = user.name?.split(" ") ?? [];
         const firstName = nameParts[0] ?? null;
         const lastName = nameParts.slice(1).join(" ") || null;
-        
+
         await prisma.user.create({
           data: {
             email: user.email,
@@ -116,8 +114,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true;
     },
-  },
-  pages: {
-    signIn: "/login",
   },
 });
