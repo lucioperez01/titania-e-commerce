@@ -3,11 +3,18 @@
 import { useActionState } from "react";
 import { loginAction, googleSignIn } from "./actions";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function LoginPage() {
   const [state, formAction] = useActionState(loginAction, null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset isSubmitting when there's an error or on initial render
+  useEffect(() => {
+    if (state?.error || state === null) {
+      setIsSubmitting(false);
+    }
+  }, [state]);
 
   if (state?.success) {
     window.location.href = "/";
