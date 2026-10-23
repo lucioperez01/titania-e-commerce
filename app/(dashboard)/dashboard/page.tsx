@@ -77,7 +77,7 @@ export default async function DashboardPage() {
                         title="Ingresos Totales"
                         value={`$${metrics.totalSold.toLocaleString("es-AR")}`}
                         icon={<DollarSign className="h-5 w-5 text-emerald-400" />}
-                        trend={{ value: 12, label: "vs mes anterior" }}
+                        trend={{ value: metrics.totalSoldTrend, label: "vs mes anterior" }}
                         variant="hero"
                     />
                 </div>
@@ -85,25 +85,25 @@ export default async function DashboardPage() {
                     title="Ticket Promedio"
                     value={`$${Math.round(metrics.avgTicket).toLocaleString("es-AR")}`}
                     icon={<CreditCard className="h-4 w-4 text-cyan-400" />}
-                    trend={{ value: 5, label: "por venta" }}
+                    trend={{ value: metrics.avgTicketTrend, label: "vs mes anterior" }}
                 />
                 <StatCard
                     title="Pedidos Activos"
                     value={metrics.totalOrders}
                     icon={<ShoppingCart className="h-4 w-4 text-indigo-400" />}
-                    trend={{ value: 8, label: "total ventas" }}
+                    trend={{ value: metrics.totalOrdersTrend, label: "vs mes anterior" }}
                 />
                 <StatCard
                     title="Clientes Recurrentes"
                     value={metrics.repeatCustomers}
                     icon={<Users className="h-4 w-4 text-purple-400" />}
-                    trend={{ value: 3, label: "+1 vez" }}
+                    trend={{ value: metrics.repeatCustomersTrend, label: "vs mes anterior" }}
                 />
                 <StatCard
                     title="Ventas Hoy"
                     value={`$${metrics.todaySales.toLocaleString("es-AR")}`}
                     icon={<CalendarCheck className="h-5 w-5 text-purple-400" />}
-                    trend={{ value: 0, label: "hoy" }}
+                    trend={{ value: metrics.todaySalesTrend, label: "vs promedio 7 días" }}
                     variant="secondary"
                 />
             </div>
