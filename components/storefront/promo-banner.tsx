@@ -54,8 +54,8 @@ export default function PromoBanner({ promotions }: PromoBannerProps) {
               font-weight: 600;
               letter-spacing: 0.08em;
               text-transform: uppercase;
-              font-size: 0.8125rem;
-              line-height: 1;
+              font-size: 0.875rem;
+              line-height: 1.4;
               white-space: nowrap;
             }
             @media (prefers-reduced-motion: reduce) {
@@ -66,15 +66,15 @@ export default function PromoBanner({ promotions }: PromoBannerProps) {
       />
 
       <div
-        className="w-full overflow-hidden bg-neutral-950"
+        className="w-full overflow-hidden bg-neutral-950 py-3"
         role="region"
         aria-label="Promociones activas"
       >
-        <div className="promo-banner-track flex w-max">
+        <div className="promo-banner-track flex w-max items-center">
           {/* First set */}
-          <div className="flex shrink-0">{content}</div>
+          <div className="flex shrink-0 items-center">{content}</div>
           {/* Duplicated set for seamless loop — hidden from a11y tree */}
-          <div className="flex shrink-0" aria-hidden="true">
+          <div className="flex shrink-0 items-center" aria-hidden="true">
             {content}
           </div>
         </div>
