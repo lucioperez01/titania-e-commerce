@@ -66,7 +66,7 @@ export default function PromoBanner({ promotions }: PromoBannerProps) {
       />
 
       <div
-        className="w-full overflow-hidden bg-neutral-950 py-3"
+        className="w-full overflow-hidden bg-purple-950 py-3"
         role="region"
         aria-label="Promociones activas"
       >

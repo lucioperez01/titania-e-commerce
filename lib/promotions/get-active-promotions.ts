@@ -21,7 +21,7 @@ export type FormattedPromotion = {
  * - Date range: startsAt <= now <= endsAt (null bounds are treated as unbounded)
  *
  * Message format example:
- *   "VERANO 20% OFF en compras +$30.000 | Válido hasta 31/12"
+ *   "VERANO 20% OFF en compras desde $30.000 | Válido hasta 31/12"
  *   "NAVIDAD 15% OFF | Válido hasta 25/12"  (no condition)
  *   "CYBER $5.000 OFF llevando 3 unidades | Válido hasta 15/11"
  */
@@ -139,7 +139,7 @@ function formatBenefit(discountType: string, value: Decimal): string | null {
 
 /**
  * Formats the condition portion of the message.
- * - minSubtotal present → "en compras +$30.000"
+ * - minSubtotal present → "en compras desde $30.000"
  * - minQuantity present → "llevando 3 unidades"
  * - both null         → "" (no condition to display)
  */
@@ -151,7 +151,7 @@ function formatCondition(
   if (condition.minSubtotal != null) {
     const subtotal = Number(condition.minSubtotal);
     if (!Number.isNaN(subtotal) && subtotal > 0) {
-      return `en compras +$${subtotal.toLocaleString("es-AR")}`;
+      return `en compras desde $${subtotal.toLocaleString("es-AR")}`;
     }
   }
 
