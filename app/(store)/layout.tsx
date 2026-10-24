@@ -14,13 +14,11 @@ export default async function StoreLayout({
     const promotions = await getActivePromotions().catch(() => []);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-between gap-5">
-            <div className="w-full">
-                <PromoBanner promotions={promotions} />
-                <Navbar />
-            </div>
+        <div className="flex flex-col min-h-screen justify-between gap-5 w-full max-w-full">
+            <PromoBanner promotions={promotions} />
+            <Navbar />
 
-            <main className="">
+            <main className="flex-1">
                 {children}
             </main>
 

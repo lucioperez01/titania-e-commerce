@@ -18,18 +18,21 @@ type PromoBannerProps = {
 export default function PromoBanner({ promotions }: PromoBannerProps) {
   if (promotions.length === 0) return null;
 
-  // Build the visual content once and duplicate it for the seamless loop.
+  // Build the visual content once.
   // Each promo is separated by a decorative diamond.
-  const content = promotions.map((promo, index) => (
-    <span key={promo.id} className="inline-flex items-center gap-3 px-4">
-      <span className="promo-banner-text">{promo.message}</span>
-      {index < promotions.length - 1 && (
-        <span className="text-amber-400/40" aria-hidden>
-          ✦
-        </span>
-      )}
-    </span>
-  ));
+  // We render 4 copies per half (8 total) so each half is ≥ 2000px,
+  // preventing visible gaps on large viewports (1536px+).
+  const renderPromoList = (keyPrefix: string) =>
+    promotions.map((promo, index) => (
+      <span key={`${keyPrefix}-${promo.id}`} className="inline-flex items-center gap-3 px-4">
+        <span className="promo-banner-text">{promo.message}</span>
+        {index < promotions.length - 1 && (
+          <span className="text-amber-400/40" aria-hidden>
+            ✦
+          </span>
+        )}
+      </span>
+    ));
 
   return (
     <>
@@ -43,7 +46,7 @@ export default function PromoBanner({ promotions }: PromoBannerProps) {
               to   { transform: translate3d(-50%, 0, 0); }
             }
             .promo-banner-track {
-              animation: promo-banner-marquee 30s linear infinite;
+              animation: promo-banner-marquee 50s linear infinite;
               will-change: transform;
             }
             .promo-banner-text {
@@ -71,11 +74,19 @@ export default function PromoBanner({ promotions }: PromoBannerProps) {
         aria-label="Promociones activas"
       >
         <div className="promo-banner-track flex w-max items-center">
-          {/* First set */}
-          <div className="flex shrink-0 items-center">{content}</div>
-          {/* Duplicated set for seamless loop — hidden from a11y tree */}
+          {/* First half — 4 copies for ≥ 2000px width */}
+          <div className="flex shrink-0 items-center">
+            {renderPromoList("a1")}
+            {renderPromoList("a2")}
+            {renderPromoList("a3")}
+            {renderPromoList("a4")}
+          </div>
+          {/* Second half — identical for seamless loop, hidden from a11y tree */}
           <div className="flex shrink-0 items-center" aria-hidden="true">
-            {content}
+            {renderPromoList("b1")}
+            {renderPromoList("b2")}
+            {renderPromoList("b3")}
+            {renderPromoList("b4")}
           </div>
         </div>
       </div>
