@@ -14,7 +14,7 @@ export default async function Navbar() {
   const hasCategories = categories && categories.length > 0
 
   return (
-    <header className="sticky top-0 w-full z-20 bg-purple-950/80 backdrop-blur-md border-b border-purple-400/20">
+    <header className="sticky top-0 w-full z-20 bg-purple-950/90 backdrop-blur-md border-b-2 border-amber-400/20">
       <div className="w-[92%] max-w-6xl mx-auto flex items-center justify-between h-14">
         {/* Logo */}
         <Link href="/" className="font-primary text-lg font-normal tracking-[0.15em] text-white uppercase shrink-0">
