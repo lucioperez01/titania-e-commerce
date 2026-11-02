@@ -1,11 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-// Mock next-auth/jwt
-jest.mock("next-auth/jwt", () => ({
-  getToken: jest.fn(),
+// Mock @/lib/auth (Auth.js v5 pattern)
+// auth() wraps a handler: auth(handler) => (req) => handler({ ...req, auth })
+const mockAuthState: { auth: { user: { role: string } } | null } = {
+  auth: null,
+};
+
+jest.mock("@/lib/auth", () => ({
+  auth: (handler: (req: any) => any) =>
+    (req: any) => handler({ ...req, auth: mockAuthState.auth }),
 }));
 
-// Mock NEXTAUTH_SECRET
 const originalEnv = process.env;
 
 describe("middleware", () => {
@@ -14,6 +19,7 @@ describe("middleware", () => {
   beforeEach(async () => {
     jest.resetModules();
     process.env = { ...originalEnv, NEXTAUTH_SECRET: "test-secret" };
+    mockAuthState.auth = null;
     middleware = await import("../../proxy");
   });
 
@@ -29,47 +35,42 @@ describe("middleware", () => {
     } as unknown as NextRequest;
   };
 
-  it("should allow non-dashboard routes", async () => {
-    const { getToken } = require("next-auth/jwt");
-    getToken.mockResolvedValue(null);
+  it("should allow non-dashboard routes when authenticated", async () => {
+    mockAuthState.auth = { user: { role: "ADMIN" } };
 
-    const response = await middleware.proxy(makeRequest("/shop"));
+    const response = await middleware.default(makeRequest("/shop"));
 
     expect(response.status).toBe(200); // NextResponse.next() returns 200
   });
 
   it("should redirect unauthenticated users to login", async () => {
-    const { getToken } = require("next-auth/jwt");
-    getToken.mockResolvedValue(null);
+    mockAuthState.auth = null;
 
-    const response = await middleware.proxy(makeRequest("/dashboard"));
+    const response = await middleware.default(makeRequest("/dashboard"));
 
     expect(response.headers.get("location")).toContain("/login");
   });
 
   it("should redirect non-admin users to home", async () => {
-    const { getToken } = require("next-auth/jwt");
-    getToken.mockResolvedValue({ userId: "1", role: "USER" });
+    mockAuthState.auth = { user: { role: "USER" } };
 
-    const response = await middleware.proxy(makeRequest("/dashboard"));
+    const response = await middleware.default(makeRequest("/dashboard"));
 
     expect(response.headers.get("location")).toContain("/");
   });
 
   it("should allow admin users to access dashboard", async () => {
-    const { getToken } = require("next-auth/jwt");
-    getToken.mockResolvedValue({ userId: "1", role: "ADMIN" });
+    mockAuthState.auth = { user: { role: "ADMIN" } };
 
-    const response = await middleware.proxy(makeRequest("/dashboard"));
+    const response = await middleware.default(makeRequest("/dashboard"));
 
     expect(response.status).toBe(200); // NextResponse.next()
   });
 
   it("should protect nested dashboard routes", async () => {
-    const { getToken } = require("next-auth/jwt");
-    getToken.mockResolvedValue(null);
+    mockAuthState.auth = null;
 
-    const response = await middleware.proxy(makeRequest("/dashboard/products"));
+    const response = await middleware.default(makeRequest("/dashboard/products"));
 
     expect(response.headers.get("location")).toContain("/login");
   });

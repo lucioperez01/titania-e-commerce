@@ -115,7 +115,6 @@ describe("MercadoPagoProvider", () => {
                     payer: {
                         email: "buyer@example.com",
                     },
-                    auto_return: "approved",
                     binary_mode: true,
                 },
             });

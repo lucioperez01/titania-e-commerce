@@ -45,6 +45,17 @@ jest.mock("@/components/cart/add-to-cart-button", () => ({
     },
 }))
 
+jest.mock("@/components/cart/buy-now-button", () => ({
+    __esModule: true,
+    default: function BuyNowButton({ productId }: { productId: number }) {
+        return (
+            <button data-testid="buy-now" data-product-id={productId}>
+                Buy Now
+            </button>
+        )
+    },
+}))
+
 jest.mock("@/components/wishlist/wishlist-button", () => ({
     __esModule: true,
     default: function WishlistButton({ productId }: { productId: number }) {
