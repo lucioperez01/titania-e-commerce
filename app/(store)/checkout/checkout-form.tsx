@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
 import { saveConsent, checkoutWithMercadoPago, getOrderSummary, getUserAddresses, type SavedAddress } from "./actions";
 import { useCart } from "@/components/cart/cart-provider";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogIn, MapPin, Plus } from "lucide-react";
 import { ProvinceSelect } from "@/components/checkout/province-select";
@@ -14,7 +13,6 @@ import { CouponInput } from "./coupon-input";
 export default function CheckoutForm() {
   const { state: cartState, dispatch } = useCart();
   const { data: session } = useSession();
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [mailing, setMailing] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -36,6 +34,17 @@ export default function CheckoutForm() {
 
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
 
+  const handleSelectAddress = useCallback((address: SavedAddress) => {
+    setSelectedAddressId(address.id);
+    setUseNewAddress(false);
+    setFullName(address.fullName);
+    setPhone(address.phone);
+    setAddressLine1(address.line1);
+    setAddressCity(address.city);
+    setAddressProvince(address.province);
+    setAddressPostalCode(address.postalCode);
+  }, []);
+
   // Cargar direcciones guardadas
   useEffect(() => {
     if (session?.user?.id) {
@@ -48,18 +57,7 @@ export default function CheckoutForm() {
         }
       });
     }
-  }, [session?.user?.id]);
-
-  function handleSelectAddress(address: SavedAddress) {
-    setSelectedAddressId(address.id);
-    setUseNewAddress(false);
-    setFullName(address.fullName);
-    setPhone(address.phone);
-    setAddressLine1(address.line1);
-    setAddressCity(address.city);
-    setAddressProvince(address.province);
-    setAddressPostalCode(address.postalCode);
-  }
+  }, [session?.user?.id, selectedAddressId, useNewAddress, handleSelectAddress]);
 
   function handleUseNewAddress() {
     setUseNewAddress(true);

@@ -4,7 +4,6 @@ import { useActionState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { loginAction, googleSignIn } from "./actions";
 import Link from "next/link";
-import { useState } from "react";
 
 export default function LoginPage() {
   return (
@@ -24,15 +23,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "";
 
-  const [state, formAction] = useActionState(loginAction, null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Reset submitting state once the action settles (success or error)
-  useEffect(() => {
-    if (state?.error || state === null) {
-      setIsSubmitting(false);
-    }
-  }, [state]);
+  const [state, formAction, isPending] = useActionState(loginAction, null);
 
   // Client-side redirect after successful login.
   // The server action returns the resolved URL (callbackUrl or role-based fallback).
@@ -55,7 +46,6 @@ function LoginForm() {
 
         <form
           action={formAction}
-          onSubmit={() => setIsSubmitting(true)}
           className="space-y-4"
         >
           {callbackUrl && (
@@ -71,7 +61,7 @@ function LoginForm() {
               id="email"
               name="email"
               required
-              disabled={isSubmitting}
+              disabled={isPending}
               className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
             />
           </div>
@@ -85,17 +75,17 @@ function LoginForm() {
               id="password"
               name="password"
               required
-              disabled={isSubmitting}
+              disabled={isPending}
               className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
             />
           </div>
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isPending}
             className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
+            {isPending ? "Iniciando sesión..." : "Iniciar sesión"}
           </button>
         </form>
 
@@ -106,7 +96,7 @@ function LoginForm() {
             )}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

@@ -131,4 +131,15 @@ export class PrismaOrderRepository implements OrderRepository {
             });
             return { count: result.count };
         }
+
+        async countRecentCancelledOrders(userId: number, windowMs: number): Promise<number> {
+            const retryWindowStart = new Date(Date.now() - windowMs);
+            return prisma.order.count({
+                where: {
+                    userId,
+                    status: "CANCELLED",
+                    createdAt: { gte: retryWindowStart },
+                },
+            });
+        }
     }

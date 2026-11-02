@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Search, ChevronRight, TrendingUp, X } from "lucide-react"
 import { useSearch } from "./search-context"
 import { ProductDTO, CategoryDTO } from "@/Interfaces/dto/product.dto"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 
 const RECENT_SEARCHES_KEY = "titania-recent-searches"
 const MAX_RECENT_SEARCHES = 5
@@ -21,16 +22,20 @@ export default function SearchOverlay() {
     const [results, setResults] = useState<SearchResults>({ products: [], categories: [] })
     const [popularCategories, setPopularCategories] = useState<CategoryDTO[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const [recentSearches, setRecentSearches] = useState<string[]>([])
+    const [recentSearches, setRecentSearches] = useLocalStorage<string[]>(RECENT_SEARCHES_KEY, [])
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const inputRef = useRef<HTMLInputElement>(null)
+    const [prevQuery, setPrevQuery] = useState(query)
 
-    useEffect(() => {
-        const stored = localStorage.getItem(RECENT_SEARCHES_KEY)
-        if (stored) {
-            try { setRecentSearches(JSON.parse(stored)) } catch { /* ignore */ }
-        }
-    }, [])
+    // Render-time state adjustment: show loading immediately when query becomes valid
+    if (query !== prevQuery && query.length >= 2) {
+        setPrevQuery(query)
+        setIsLoading(true)
+    }
+
+    // Derived state: show empty results when query is too short
+    const visibleResults = query.length < 2 ? { products: [], categories: [] } : results
+    const showLoading = query.length >= 2 && isLoading
 
     useEffect(() => {
         document.body.style.overflow = isOpen ? "hidden" : ""
@@ -61,12 +66,9 @@ export default function SearchOverlay() {
         if (debounceRef.current) clearTimeout(debounceRef.current)
 
         if (query.length < 2) {
-            setResults({ products: [], categories: [] })
-            setIsLoading(false)
             return
         }
 
-        setIsLoading(true)
         debounceRef.current = setTimeout(async () => {
             try {
                 const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
@@ -90,7 +92,7 @@ export default function SearchOverlay() {
             localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated))
             return updated
         })
-    }, [])
+    }, [setRecentSearches])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && query.trim().length >= 2) {
@@ -182,11 +184,11 @@ export default function SearchOverlay() {
                             </div>
                         )}
 
-                        {results.categories.length > 0 && (
+                        {visibleResults.categories.length > 0 && (
                             <div>
                                 <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Categorías</p>
                                 <div className="space-y-2">
-                                    {results.categories.map(cat => (
+                                    {visibleResults.categories.map(cat => (
                                         <Link
                                             key={cat.id}
                                             href={`/shop?category=${cat.slug}`}
@@ -201,11 +203,11 @@ export default function SearchOverlay() {
                             </div>
                         )}
 
-                        {results.products.length > 0 && (
+                        {visibleResults.products.length > 0 && (
                             <div>
                                 <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Productos</p>
                                 <div className="space-y-3">
-                                    {results.products.map(product => (
+                                    {visibleResults.products.map(product => (
                                         <Link
                                             key={product.id}
                                             href={`/product/${product.slug}`}
@@ -229,13 +231,13 @@ export default function SearchOverlay() {
                             </div>
                         )}
 
-                        {isLoading && (
+                        {showLoading && (
                             <div className="flex items-center justify-center py-8">
                                 <div className="w-5 h-5 border-2 border-purple-500/30 border-t-purple-400 rounded-full animate-spin" />
                             </div>
                         )}
 
-                        {query.length >= 2 && !isLoading && results.products.length === 0 && results.categories.length === 0 && (
+                        {query.length >= 2 && !showLoading && visibleResults.products.length === 0 && visibleResults.categories.length === 0 && (
                             <div className="text-center py-8">
                                 <p className="text-sm text-white/60">Sin resultados para &quot;{query}&quot;</p>
                                 <Link

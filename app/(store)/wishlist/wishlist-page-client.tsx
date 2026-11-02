@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Heart, ShoppingCart } from "lucide-react"
 import { useWishlist } from "@/components/wishlist/wishlist-provider"
@@ -8,24 +8,9 @@ import { useCart } from "@/components/cart/cart-provider"
 import { useToast } from "@/components/ui/toast"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import Price from "@/components/product/price"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 
 const MOVE_TO_CART_KEY = "titania-move-to-cart"
-
-function useMoveToCart() {
-    const [moveToCart, setMoveToCart] = useState(true)
-
-    useEffect(() => {
-        const stored = localStorage.getItem(MOVE_TO_CART_KEY)
-        if (stored !== null) setMoveToCart(stored === "true")
-    }, [])
-
-    const handleChange = (value: boolean) => {
-        setMoveToCart(value)
-        localStorage.setItem(MOVE_TO_CART_KEY, String(value))
-    }
-
-    return { moveToCart, setMoveToCart: handleChange }
-}
 
 interface WishlistProductCardProps {
     product: ProductDTO
@@ -124,7 +109,7 @@ interface WishlistPageClientProps {
 
 export default function WishlistPageClient({ items: initialItems }: WishlistPageClientProps) {
     const [items, setItems] = useState(initialItems)
-    const { moveToCart, setMoveToCart } = useMoveToCart()
+    const [moveToCart, setMoveToCart] = useLocalStorage<boolean>(MOVE_TO_CART_KEY, true)
 
     const handleRemove = (productId: number) => {
         setItems(prev => prev.filter(item => item.product.id !== productId))

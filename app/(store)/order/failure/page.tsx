@@ -1,4 +1,5 @@
 import { prisma } from "@/infrastructure/db/prismaClient";
+import { PrismaOrderRepository } from "@/infrastructure/repositories/PrismaOrderRepository";
 import { notFound } from "next/navigation";
 import { RetryButton } from "./retry-button";
 
@@ -8,6 +9,7 @@ interface FailurePageProps {
 
 const MAX_RETRIES = 3;
 const RETRY_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const orderRepository = new PrismaOrderRepository();
 
 export default async function OrderFailurePage({ searchParams }: FailurePageProps) {
   const { order_id } = await searchParams;
@@ -38,14 +40,10 @@ export default async function OrderFailurePage({ searchParams }: FailurePageProp
   }
 
   // Calculate retry count (orders created within the retry window for the same user)
-  const retryWindowStart = new Date(Date.now() - RETRY_WINDOW_MS);
-  const retryCount = await prisma.order.count({
-    where: {
-      userId: order.userId ?? undefined,
-      status: "CANCELLED",
-      createdAt: { gte: retryWindowStart },
-    },
-  });
+  const retryCount = await orderRepository.countRecentCancelledOrders(
+    order.userId ?? 0,
+    RETRY_WINDOW_MS
+  );
 
   const canRetry = retryCount < MAX_RETRIES && order.status === "RESERVED";
   const retriesRemaining = Math.max(0, MAX_RETRIES - retryCount);

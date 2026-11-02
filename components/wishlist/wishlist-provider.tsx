@@ -131,7 +131,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         if (!hasMerged.current) {
             mergeAndHydrate()
         }
-    }, [userId, state.isHydrating])
+    }, [userId, state.isHydrating, state.productIds])
 
     useEffect(() => {
         if (typeof window === "undefined") return

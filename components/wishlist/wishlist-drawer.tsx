@@ -10,6 +10,7 @@ import { useCart } from "@/components/cart/cart-provider"
 import { useToast } from "@/components/ui/toast"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import CartDrawerSkeleton from "@/components/skeletons/cart-drawer-skeleton"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 
 interface WishlistItemWithProduct {
     id: number
@@ -18,31 +19,15 @@ interface WishlistItemWithProduct {
 
 const MOVE_TO_CART_KEY = "titania-move-to-cart"
 
-function useMoveToCart() {
-    const [moveToCart, setMoveToCart] = useState(true)
-
-    useEffect(() => {
-        const stored = localStorage.getItem(MOVE_TO_CART_KEY)
-        if (stored !== null) setMoveToCart(stored === "true")
-    }, [])
-
-    const handleChange = (value: boolean) => {
-        setMoveToCart(value)
-        localStorage.setItem(MOVE_TO_CART_KEY, String(value))
-    }
-
-    return { moveToCart, setMoveToCart: handleChange }
-}
-
 export default function WishlistDrawer() {
     const { isOpen, close } = useWishlistDrawer()
-    const { state, toggle: toggleWishlist, isInWishlist } = useWishlist()
+    const { state, toggle: toggleWishlist } = useWishlist()
     const { dispatch: cartDispatch } = useCart()
     const { showToast } = useToast()
     const [items, setItems] = useState<WishlistItemWithProduct[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [addingToCart, setAddingToCart] = useState<number | null>(null)
-    const { moveToCart, setMoveToCart } = useMoveToCart()
+    const [moveToCart, setMoveToCart] = useLocalStorage<boolean>(MOVE_TO_CART_KEY, true)
 
     useEffect(() => {
         if (!isOpen) return

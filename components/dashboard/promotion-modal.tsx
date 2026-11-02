@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition, useEffect } from "react"
-import { PromotionDTO, PromotionConditionDTO, PromotionBenefitDTO } from "@/Interfaces/dto/promotion.dto"
+import { useState, useTransition } from "react"
+import { PromotionDTO } from "@/Interfaces/dto/promotion.dto"
 import { ProductDTO } from "@/Interfaces/dto/product.dto"
 import { ActionResult } from "@/app/(dashboard)/actions"
 import { Plus, X } from "lucide-react"
@@ -48,38 +48,40 @@ const emptyBenefit = (): BenefitForm => ({
 export default function PromotionModal({ products, promotion, isOpen, mode = "create", onClose, action }: Props) {
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
+    const [sessionKey, setSessionKey] = useState<string | null>(null)
     const [conditions, setConditions] = useState<ConditionForm[]>([])
     const [benefits, setBenefits] = useState<BenefitForm[]>([])
     const [type, setType] = useState<"COUPON" | "AUTOMATIC">("COUPON")
 
-    useEffect(() => {
-        if (isOpen) {
-            setError(null)
-            if (mode === "edit" && promotion) {
-                setType(promotion.type)
-                setConditions(
-                    promotion.conditions.map((c) => ({
-                        minQuantity: c.minQuantity?.toString() ?? "",
-                        minSubtotal: c.minSubtotal?.toString() ?? "",
-                        productId: c.productId?.toString() ?? "",
-                        variantId: c.variantId?.toString() ?? "",
-                    }))
-                )
-                setBenefits(
-                    promotion.benefits.map((b) => ({
-                        discountType: b.discountType as "PERCENTAGE" | "FIXED",
-                        value: b.value.toString(),
-                        applyToProductId: b.applyToProductId?.toString() ?? "",
-                        applyToVariantId: b.applyToVariantId?.toString() ?? "",
-                    }))
-                )
-            } else {
-                setType("COUPON")
-                setConditions([emptyCondition()])
-                setBenefits([emptyBenefit()])
-            }
+    // Render-time state adjustment: reset form when modal session changes
+    const currentSessionKey = isOpen ? `${mode}-${promotion?.id ?? 'new'}` : null
+    if (currentSessionKey !== sessionKey && currentSessionKey !== null) {
+        setSessionKey(currentSessionKey)
+        setError(null)
+        if (mode === "edit" && promotion) {
+            setType(promotion.type)
+            setConditions(
+                promotion.conditions.map((c) => ({
+                    minQuantity: c.minQuantity?.toString() ?? "",
+                    minSubtotal: c.minSubtotal?.toString() ?? "",
+                    productId: c.productId?.toString() ?? "",
+                    variantId: c.variantId?.toString() ?? "",
+                }))
+            )
+            setBenefits(
+                promotion.benefits.map((b) => ({
+                    discountType: b.discountType as "PERCENTAGE" | "FIXED",
+                    value: b.value.toString(),
+                    applyToProductId: b.applyToProductId?.toString() ?? "",
+                    applyToVariantId: b.applyToVariantId?.toString() ?? "",
+                }))
+            )
+        } else {
+            setType("COUPON")
+            setConditions([emptyCondition()])
+            setBenefits([emptyBenefit()])
         }
-    }, [isOpen, promotion, mode])
+    }
 
     if (!isOpen) return null
 
