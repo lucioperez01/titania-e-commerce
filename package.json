@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "test:repo": "jest infrastructure/repositories/tests/PrismaUserRepository.test.ts"
   },
   "dependencies": {
