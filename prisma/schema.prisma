@@ -244,6 +244,7 @@ model OrderItem {
   variantId  Int?            // opcional
   quantity   Int
   price      Decimal         @db.Decimal(10,2)
+  costPrice  Decimal?        @db.Decimal(10,2)
   isDeleted  Boolean         @default(false)
   deletedAt  DateTime?
 

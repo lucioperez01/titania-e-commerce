@@ -12,6 +12,7 @@ import {
     AlertTriangle,
     Calendar,
     CalendarCheck,
+    PiggyBank,
 } from "lucide-react"
 import { getDashboardMetricsAction, getRecentOrdersAction, getWeeklyIncomeAction } from "./orders/actions"
 import { EmptyState } from "@/components/dashboard/empty-state"
@@ -104,6 +105,13 @@ export default async function DashboardPage() {
                     value={`$${metrics.todaySales.toLocaleString("es-AR")}`}
                     icon={<CalendarCheck className="h-5 w-5 text-purple-400" />}
                     trend={{ value: metrics.todaySalesTrend, label: "vs promedio 7 días" }}
+                    variant="secondary"
+                />
+                <StatCard
+                    title="Ganancia Estimada"
+                    value={`$${Math.round(metrics.totalMargin).toLocaleString("es-AR")}`}
+                    icon={<PiggyBank className="h-5 w-5 text-emerald-400" />}
+                    trend={{ value: metrics.totalMarginTrend, label: "vs mes anterior" }}
                     variant="secondary"
                 />
             </div>

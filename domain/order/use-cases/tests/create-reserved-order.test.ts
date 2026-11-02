@@ -85,6 +85,7 @@ const mockProducts = [
     id: 10,
     name: "Test Product",
     price: 5000,
+    costPrice: 3000,
     stock: 10,
     reservedStock: 0,
     variants: [],
@@ -287,7 +288,6 @@ describe("CreateReservedOrder", () => {
             }),
           ]),
           payer: { email: "test@example.com" },
-          auto_return: "approved",
           binary_mode: true,
         }),
       });
@@ -388,7 +388,7 @@ describe("CreateReservedOrder", () => {
   });
 
   describe("pricing", () => {
-    it("should apply free shipping for orders >= 50000", async () => {
+    it("should apply free shipping for orders >= 100000", async () => {
       const expensiveCart = {
         ...mockCart,
         items: [{ id: 1, productId: 10, variantId: null, quantity: 10 }],
@@ -397,7 +397,7 @@ describe("CreateReservedOrder", () => {
       const expensiveProducts = [
         {
           ...mockProducts[0],
-          price: 6000, // 6000 * 10 = 60000 > 50000
+          price: 12000, // 12000 * 10 = 120000 >= 100000
           stock: 100,
         },
       ];
@@ -426,12 +426,12 @@ describe("CreateReservedOrder", () => {
       const useCase = new CreateReservedOrder(FAKE_TOKEN);
       await useCase.execute(validInput);
 
-      // Verify order was created with total = 60000 + 0 (free shipping)
+      // Verify order was created with total = 120000 + 0 (free shipping)
       expect(mockOrderCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            subtotal: 60000,
-            total: 60000, // free shipping
+            subtotal: 120000,
+            total: 120000, // free shipping
             shippingCost: 0,
           }),
         })

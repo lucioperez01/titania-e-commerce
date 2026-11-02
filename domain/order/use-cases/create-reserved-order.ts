@@ -67,6 +67,7 @@ export class CreateReservedOrder {
       variantId: number | null;
       quantity: number;
       price: number;
+      costPrice: number | null;
       title: string;
       pictureUrl?: string;
     }> = [];
@@ -109,6 +110,7 @@ export class CreateReservedOrder {
         variantId: cartItem.variantId,
         quantity: cartItem.quantity,
         price: Number(price),
+        costPrice: product.costPrice != null ? Number(product.costPrice) : null,
         title: cartItem.variantId
           ? `${product.name} (${product.variants.find((v) => v.id === cartItem.variantId)?.sku ?? cartItem.variantId})`
           : product.name,
@@ -158,6 +160,7 @@ export class CreateReservedOrder {
               variantId: item.variantId,
               quantity: item.quantity,
               price: item.price,
+              costPrice: item.costPrice,
             })),
           },
         },

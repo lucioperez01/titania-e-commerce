@@ -1,4 +1,4 @@
-import { ProductDTO, productToDTO } from "@/Interfaces/dto/product.dto"
+import { ProductDTO, productToDTO, AdminProductDTO, adminProductToDTO } from "@/Interfaces/dto/product.dto"
 import { PrismaProductRepository } from "@/infrastructure/repositories/PrismaProductRepository"
 import { PrismaCategoriesRepository } from "@/infrastructure/repositories/PrismaCategoryRepository"
 
@@ -25,4 +25,23 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         ? await repo.findAll({ isOnline: true, categoryId, sizes: options?.sizes })
         : await repo.findAll({ categoryId, sizes: options?.sizes })
     return products.map(productToDTO)
+}
+
+export async function getAdminProducts(options?: GetProductsOptions): Promise<AdminProductDTO[]> {
+    const repo = new PrismaProductRepository()
+    const categoryRepo = new PrismaCategoriesRepository()
+    
+    let categoryId: number | undefined
+    if (options?.categorySlug) {
+        const category = await categoryRepo.findBySlug(options.categorySlug)
+        if (!category) {
+            return []
+        }
+        categoryId = category.id
+    }
+    
+    const products = options?.onlyOnline
+        ? await repo.findAll({ isOnline: true, categoryId, sizes: options?.sizes })
+        : await repo.findAll({ categoryId, sizes: options?.sizes })
+    return products.map(adminProductToDTO)
 }

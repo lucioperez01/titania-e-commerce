@@ -1,16 +1,15 @@
 'use client'
 
 import { useState, useTransition } from "react"
-import { ProductDTO } from "@/Interfaces/dto/product.dto"
+import { ProductDTO, AdminProductDTO } from "@/Interfaces/dto/product.dto"
 import { CategoryDTO } from "@/Interfaces/dto/product.dto"
 import { ActionResult } from "@/app/(dashboard)/actions"
-import {useEffect} from "react";
 
 type ProductModalMode = "create" | "edit"
 
 type Props = {
     categories: CategoryDTO[];
-    product?: ProductDTO;
+    product?: AdminProductDTO;
     isOpen: boolean;
     mode?: ProductModalMode;
     onClose: () => void;
@@ -32,18 +31,20 @@ function resolveInitialSize(product?: ProductDTO): { selectValue: string; custom
 export default function ProductModal({ categories, product, isOpen, mode = "create", onClose, action }: Props) {
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
-    const [imageUrls, setImageUrls] = useState<string[]>([])
+    const [prevProductId, setPrevProductId] = useState<number | null>(null)
+    const [imageUrls, setImageUrls] = useState<string[]>([""])
     const [sizeSelectValue, setSizeSelectValue] = useState("")
     const [customSize, setCustomSize] = useState("")
 
-    useEffect(() => {
-        setImageUrls(
-            product?.images?.map((image) => image.url) ?? [""]
-        )
+    // Render-time state adjustment: reset form when product changes
+    const currentProductId = product?.id ?? null
+    if (currentProductId !== prevProductId) {
+        setPrevProductId(currentProductId)
+        setImageUrls(product?.images?.map((image) => image.url) ?? [""])
         const initial = resolveInitialSize(product)
         setSizeSelectValue(initial.selectValue)
         setCustomSize(initial.customSize)
-    }, [product?.id])
+    }
 
     if (!isOpen) return null
 
@@ -141,6 +142,12 @@ export default function ProductModal({ categories, product, isOpen, mode = "crea
                     </div>
                 )}
 
+                {mode === "edit" && product && product.costPrice == null && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm">
+                        ⚠️ Este producto no tiene precio de costo. Las métricas de ganancia no estarán disponibles hasta que lo configures.
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     {mode === "edit" && product && (
                         <input type="hidden" name="id" value={product.id} />
@@ -167,6 +174,19 @@ export default function ProductModal({ categories, product, isOpen, mode = "crea
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
                         />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="costPrice" className="block text-sm font-medium mb-2 text-neutral-900">Precio de costo (opcional)</label>
+                        <input
+                            type="number"
+                            id="costPrice"
+                            name="costPrice"
+                            min={0}
+                            step={0.01}
+                            defaultValue={product?.costPrice ?? ""}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-neutral-900"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Costo de adquisición del producto. Deja vacío si lo desconoces.</p>
                     </div>
                     <div className="mb-4">
                         <label htmlFor="stock" className="block text-sm font-medium mb-2 text-neutral-900">Stock</label>

@@ -12,6 +12,7 @@ export type CreateProductInput = {
     brand?: string
     description?: string
     images?: string[]
+    costPrice?: number | null
     size?: string | null
     width?: number | null
     length?: number | null
@@ -40,7 +41,7 @@ export async function createProduct(input: CreateProductInput): Promise<void> {
         id: 0,
         name: input.name,
         price: input.price,
-        costPrice: input.price,
+        costPrice: input.costPrice ?? null,
         stock: input.stock,
         weight: 1,
         images: input.images.map(url => new ProductImage(0, url, 0)),

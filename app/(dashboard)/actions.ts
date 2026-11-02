@@ -81,10 +81,12 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
         const size = parseNullableString(formData.get("size"))
         const width = parseNullableNumber(formData.get("width"))
         const length = parseNullableNumber(formData.get("length"))
+        const costPrice = parseNullableNumber(formData.get("costPrice"))
 
         if (size !== undefined && size !== null && size.length > 50) return { success: false, error: "El talle debe tener 50 caracteres o menos." }
         if (width !== undefined && width !== null && width < 0) return { success: false, error: "El ancho no puede ser negativo." }
         if (length !== undefined && length !== null && length < 0) return { success: false, error: "El largo no puede ser negativo." }
+        if (costPrice !== undefined && costPrice !== null && costPrice <= 0) return { success: false, error: "El precio de costo debe ser mayor a 0." }
 
         const input: CreateProductInput = {
             name,
@@ -94,6 +96,7 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
             brand: parseString(formData.get("brand")),
             description: parseString(formData.get("description")),
             images,
+            costPrice,
             size,
             width,
             length,
@@ -123,10 +126,12 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
         const size = parseNullableString(formData.get("size"))
         const width = parseNullableNumber(formData.get("width"))
         const length = parseNullableNumber(formData.get("length"))
+        const costPrice = parseNullableNumber(formData.get("costPrice"))
 
         if (size !== undefined && size !== null && size.length > 50) return { success: false, error: "El talle debe tener 50 caracteres o menos." }
         if (width !== undefined && width !== null && width < 0) return { success: false, error: "El ancho no puede ser negativo." }
         if (length !== undefined && length !== null && length < 0) return { success: false, error: "El largo no puede ser negativo." }
+        if (costPrice !== undefined && costPrice !== null && costPrice <= 0) return { success: false, error: "El precio de costo debe ser mayor a 0." }
 
         const input: UpdateProductInput = {
             id,
@@ -136,14 +141,15 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
             brand: parseString(formData.get("brand")),
             description: parseString(formData.get("description")),
             images,
+            costPrice,
             size,
             width,
             length,
         }
 
-        await updateProduct(input)
+        const result = await updateProduct(input)
         revalidatePath("/dashboard/products")
-        return { success: true }
+        return { success: true, data: { warning: result.warning } }
     } catch (err) {
         const message = err instanceof Error ? err.message : "Error al actualizar el producto."
         return { success: false, error: message }

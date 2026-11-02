@@ -84,3 +84,14 @@ export function productToDTO(product: Product): ProductDTO {
         length: product.length,
     }
 }
+
+export type AdminProductDTO = ProductDTO & {
+    costPrice: number | null
+}
+
+export function adminProductToDTO(product: Product): AdminProductDTO {
+    return {
+        ...productToDTO(product),
+        costPrice: product.costPrice,
+    }
+}

@@ -5,7 +5,7 @@ type ProductProps = {
     id: number,
     name: string,
     price: number,
-    costPrice: number,
+    costPrice: number | null,
     images: ProductImage[],
     category: Category,
     desc: string,
@@ -33,7 +33,7 @@ export class Product {
     public readonly id: number
     public readonly name: string
     public price: number
-    public costPrice: number
+    public costPrice: number | null
     public images: ProductImage[]
     public desc: string
     public brand: string
@@ -93,7 +93,7 @@ export class Product {
             throw new Error("El precio debe ser mayor a 0.")
         }
 
-        if (props.costPrice <= 0) {
+        if (props.costPrice !== null && props.costPrice !== undefined && props.costPrice <= 0) {
             throw new Error("El precio de costo debe ser mayor a 0.")
         }
 
@@ -121,9 +121,7 @@ export class Product {
             throw new Error("El peso debe ser mayor a 0.")
         }
 
-        if (props.costPrice > props.price) {
-            throw new Error("El precio de venta no puede ser menor al costo.")
-        }
+        // costPrice > price validation moved to application layer (warning, not blocking)
 
         if (props.size !== undefined && props.size !== null && props.size.length > 50) {
             throw new Error("El talle debe tener 50 caracteres o menos.")

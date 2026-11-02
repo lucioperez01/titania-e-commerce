@@ -44,11 +44,13 @@ export interface DashboardMetrics {
   }>;
   repeatCustomers: number;
   todaySales: number;
+  totalMargin: number;
   totalSoldTrend: number;
   avgTicketTrend: number;
   totalOrdersTrend: number;
   repeatCustomersTrend: number;
   todaySalesTrend: number;
+  totalMarginTrend: number;
 }
 
 /**
@@ -178,6 +180,8 @@ export class OrderDashboardRepository {
       last7DaysResult,
       currentMonthRepeatResult,
       previousMonthRepeatResult,
+      currentMonthMarginItems,
+      previousMonthMarginItems,
     ] = await Promise.all([
       // All-time revenue + order count
       prisma.order.aggregate({
@@ -190,7 +194,7 @@ export class OrderDashboardRepository {
         where: { status: "PAID", isDeleted: false },
         _avg: { total: true },
       }),
-      // Order items for best/worst sellers
+      // Order items for best/worst sellers + margin
       prisma.orderItem.findMany({
         where: {
           order: { status: { in: paidStatuses }, isDeleted: false },
@@ -277,6 +281,28 @@ export class OrderDashboardRepository {
         },
         _count: { email: true },
       }),
+      // Current month order items for margin calculation
+      prisma.orderItem.findMany({
+        where: {
+          order: {
+            status: { in: paidStatuses },
+            isDeleted: false,
+            paidAt: { gte: currentMonthStart, lt: currentMonthEnd },
+          },
+        },
+        select: { price: true, costPrice: true, quantity: true },
+      }),
+      // Previous month order items for margin trend
+      prisma.orderItem.findMany({
+        where: {
+          order: {
+            status: { in: paidStatuses },
+            isDeleted: false,
+            paidAt: { gte: previousMonthStart, lt: previousMonthEnd },
+          },
+        },
+        select: { price: true, costPrice: true, quantity: true },
+      }),
     ]);
 
     const totalSold = Number(totalSoldResult._sum.total ?? 0);
@@ -335,6 +361,28 @@ export class OrderDashboardRepository {
       (g) => g._count.email > 1
     ).length;
 
+    // Margin computation (null-safe: items with null costPrice excluded)
+    let totalMargin = 0;
+    for (const item of orderItems) {
+      if (item.costPrice != null) {
+        totalMargin += (Number(item.price) - Number(item.costPrice)) * item.quantity;
+      }
+    }
+
+    let currentMonthMargin = 0;
+    for (const item of currentMonthMarginItems) {
+      if (item.costPrice != null) {
+        currentMonthMargin += (Number(item.price) - Number(item.costPrice)) * item.quantity;
+      }
+    }
+
+    let previousMonthMargin = 0;
+    for (const item of previousMonthMarginItems) {
+      if (item.costPrice != null) {
+        previousMonthMargin += (Number(item.price) - Number(item.costPrice)) * item.quantity;
+      }
+    }
+
     return {
       totalSold,
       totalOrders,
@@ -343,11 +391,13 @@ export class OrderDashboardRepository {
       worstSellers,
       repeatCustomers,
       todaySales,
+      totalMargin,
       totalSoldTrend: calcTrend(currentMonthSold, previousMonthSold),
       avgTicketTrend: calcTrend(currentMonthAvg, previousMonthAvg),
       totalOrdersTrend: calcTrend(currentMonthOrders, previousMonthOrders),
       repeatCustomersTrend: calcTrend(currentMonthRepeat, previousMonthRepeat),
       todaySalesTrend: calcTrend(todaySales, dailyAverage),
+      totalMarginTrend: calcTrend(currentMonthMargin, previousMonthMargin),
     };
   }
 

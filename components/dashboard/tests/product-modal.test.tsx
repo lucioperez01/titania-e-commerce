@@ -7,17 +7,18 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { act } from "react"
 import ProductModal from "@/components/dashboard/product-modal"
-import { ProductDTO } from "@/Interfaces/dto/product.dto"
+import { AdminProductDTO } from "@/Interfaces/dto/product.dto"
 
 const mockAction = jest.fn()
 
 const categories = [{ id: 1, name: "Ropa", slug: "ropa" }]
 
-const product: ProductDTO = {
+const product: AdminProductDTO = {
     id: 1,
     name: "Remera",
     slug: "remera",
     price: 25000,
+    costPrice: 15000,
     stock: 10,
     images: [
         { id: 1, url: "https://example.com/1.jpg" },
@@ -79,7 +80,7 @@ describe("ProductModal", () => {
         renderModal()
         await act(async () => {
             await userEvent.type(screen.getByLabelText(/Nombre/i), "Remera")
-            await userEvent.type(screen.getByLabelText(/Precio/i), "25000")
+            await userEvent.type(screen.getByLabelText(/^Precio$/i), "25000")
             await userEvent.type(screen.getByLabelText(/Stock/i), "10")
             await userEvent.selectOptions(screen.getByLabelText(/Categoría/i), "1")
         })
@@ -96,7 +97,7 @@ describe("ProductModal", () => {
         renderModal()
         await act(async () => {
             await userEvent.type(screen.getByLabelText(/Nombre/i), "Remera")
-            await userEvent.type(screen.getByLabelText(/Precio/i), "25000")
+            await userEvent.type(screen.getByLabelText(/^Precio$/i), "25000")
             await userEvent.type(screen.getByLabelText(/Stock/i), "10")
             await userEvent.selectOptions(screen.getByLabelText(/Categoría/i), "1")
             await userEvent.type(screen.getByRole("textbox", { name: "URL de imagen" }), "https://example.com/1.jpg")
@@ -142,7 +143,7 @@ describe("ProductModal", () => {
             renderModal()
             await act(async () => {
                 await userEvent.type(screen.getByLabelText(/Nombre/i), "Remera")
-                await userEvent.type(screen.getByLabelText(/Precio/i), "25000")
+                await userEvent.type(screen.getByLabelText(/^Precio$/i), "25000")
                 await userEvent.type(screen.getByLabelText(/Stock/i), "10")
                 await userEvent.selectOptions(screen.getByLabelText(/Categoría/i), "1")
                 await userEvent.type(screen.getByRole("textbox", { name: "URL de imagen" }), "https://example.com/1.jpg")
@@ -161,7 +162,7 @@ describe("ProductModal", () => {
             renderModal()
             await act(async () => {
                 await userEvent.type(screen.getByLabelText(/Nombre/i), "Remera")
-                await userEvent.type(screen.getByLabelText(/Precio/i), "25000")
+                await userEvent.type(screen.getByLabelText(/^Precio$/i), "25000")
                 await userEvent.type(screen.getByLabelText(/Stock/i), "10")
                 await userEvent.selectOptions(screen.getByLabelText(/Categoría/i), "1")
                 await userEvent.type(screen.getByRole("textbox", { name: "URL de imagen" }), "https://example.com/1.jpg")
@@ -192,7 +193,7 @@ describe("ProductModal", () => {
             renderModal()
             await act(async () => {
                 await userEvent.type(screen.getByLabelText(/Nombre/i), "Remera")
-                await userEvent.type(screen.getByLabelText(/Precio/i), "25000")
+                await userEvent.type(screen.getByLabelText(/^Precio$/i), "25000")
                 await userEvent.type(screen.getByLabelText(/Stock/i), "10")
                 await userEvent.selectOptions(screen.getByLabelText(/Categoría/i), "1")
                 await userEvent.type(screen.getByRole("textbox", { name: "URL de imagen" }), "https://example.com/1.jpg")

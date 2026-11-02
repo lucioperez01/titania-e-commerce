@@ -1,5 +1,5 @@
 const mockCreateProduct = jest.fn()
-const mockUpdateProduct = jest.fn()
+const mockUpdateProduct = jest.fn().mockResolvedValue({})
 const mockRevalidatePath = jest.fn()
 const mockPrismaProductUpdate = jest.fn()
 

@@ -31,7 +31,7 @@ export class PrismaProductRepository implements ProductRepository {
             desc: data.description,
             price: Number(data.price),
             oldPrice: data.oldPrice != null ? Number(data.oldPrice) : undefined,
-            costPrice: Number(data.costPrice),
+            costPrice: data.costPrice != null ? Number(data.costPrice) : null,
             stock: data.stock,
             weight: data.weight,
             images: data.images || [],

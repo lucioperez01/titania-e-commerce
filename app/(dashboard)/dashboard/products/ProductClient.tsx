@@ -3,10 +3,10 @@
 import { useState } from "react"
 import ProductModal from "@/components/dashboard/product-modal"
 import { CategoryDTO } from "@/Interfaces/dto/product.dto"
-import { ProductDTO } from "@/Interfaces/dto/product.dto"
+import { AdminProductDTO } from "@/Interfaces/dto/product.dto"
 import { Button } from "@/components/ui/button"
 import { createProductAction, deleteProductAction, updateProductAction, toggleProductOnlineAction } from "@/app/(dashboard)/actions"
-import { Package, Plus } from "lucide-react"
+import { Package, Plus, AlertTriangle } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
 
 const formatCurrency = (amount: number) => {
@@ -18,9 +18,9 @@ const formatCurrency = (amount: number) => {
     }).format(amount)
 }
 
-export default function ProductsClient({ categories, products }: { categories: CategoryDTO[], products: ProductDTO[] }) {
+export default function ProductsClient({ categories, products }: { categories: CategoryDTO[], products: AdminProductDTO[] }) {
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [selectedProduct, setSelectedProduct] = useState<ProductDTO | null>(null)
+    const [selectedProduct, setSelectedProduct] = useState<AdminProductDTO | null>(null)
     const [mode, setMode] = useState<"create" | "edit">("create")
     const [onlineStatuses, setOnlineStatuses] = useState<Record<number, boolean>>(() =>
         Object.fromEntries(products.map((p) => [p.id, p.isOnline]))
@@ -32,7 +32,7 @@ export default function ProductsClient({ categories, products }: { categories: C
         setIsModalOpen(true)
     }
 
-    const openEdit = (product: ProductDTO) => {
+    const openEdit = (product: AdminProductDTO) => {
         setSelectedProduct(product)
         setMode("edit")
         setIsModalOpen(true)
@@ -45,7 +45,7 @@ export default function ProductsClient({ categories, products }: { categories: C
         await deleteProductAction(id)
     }
 
-    const handleToggleOnline = async (product: ProductDTO) => {
+    const handleToggleOnline = async (product: AdminProductDTO) => {
         const next = !onlineStatuses[product.id]
         setOnlineStatuses((prev) => ({ ...prev, [product.id]: next }))
         await toggleProductOnlineAction(product.id, next)
@@ -93,6 +93,7 @@ export default function ProductsClient({ categories, products }: { categories: C
                                     <tr className="border-b border-purple-400/20">
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Producto</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Precio</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Costo</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Stock</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Categoría</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Online</th>
@@ -119,6 +120,16 @@ export default function ProductsClient({ categories, products }: { categories: C
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-slate-300">{formatCurrency(p.price)}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-300">
+                                                {p.costPrice != null ? (
+                                                    formatCurrency(p.costPrice)
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 text-yellow-400" title="Precio de costo no configurado">
+                                                        <AlertTriangle className="h-3.5 w-3.5" />
+                                                        N/A
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-4 text-sm text-slate-300">{p.stock}</td>
                                             <td className="px-6 py-4 text-sm text-slate-300">{p.category.name}</td>
                                             <td className="px-6 py-4">
@@ -185,6 +196,17 @@ export default function ProductsClient({ categories, products }: { categories: C
                                         <div>
                                             <p className="text-xs text-slate-300">Precio</p>
                                             <p className="text-sm font-medium text-white">{formatCurrency(p.price)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-300">Costo</p>
+                                            <p className="text-sm font-medium text-white">
+                                                {p.costPrice != null ? formatCurrency(p.costPrice) : (
+                                                    <span className="inline-flex items-center gap-1 text-yellow-400">
+                                                        <AlertTriangle className="h-3 w-3" />
+                                                        N/A
+                                                    </span>
+                                                )}
+                                            </p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-slate-300">Stock</p>

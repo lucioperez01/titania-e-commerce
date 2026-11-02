@@ -164,13 +164,22 @@ describe("OrderDashboardRepository", () => {
   describe("getDashboardMetrics", () => {
     it("calculates total sold and order count", async () => {
       mockOrderAggregate
-        .mockResolvedValueOnce({ _sum: { total: 1000 }, _count: 5 })
-        .mockResolvedValueOnce({ _avg: { total: 200 } });
+        .mockResolvedValueOnce({ _sum: { total: 1000 }, _count: 5 })  // totalSold
+        .mockResolvedValueOnce({ _avg: { total: 200 } })              // avgTicket
+        .mockResolvedValueOnce({ _sum: { total: 0 } })                // todaySales
+        .mockResolvedValueOnce({ _sum: { total: 500 }, _count: 3 })   // currentMonth
+        .mockResolvedValueOnce({ _sum: { total: 400 }, _count: 2 })   // previousMonth
+        .mockResolvedValueOnce({ _avg: { total: 100 } })              // currentMonthAvg
+        .mockResolvedValueOnce({ _avg: { total: 80 } })               // previousMonthAvg
+        .mockResolvedValueOnce({ _sum: { total: 200 } });             // last7Days
 
-      mockOrderItemFindMany.mockResolvedValue([
-        { productId: 1, quantity: 3, price: 100, product: { name: "Product A" } },
-        { productId: 2, quantity: 2, price: 200, product: { name: "Product B" } },
-      ]);
+      mockOrderItemFindMany
+        .mockResolvedValueOnce([
+          { productId: 1, quantity: 3, price: 100, costPrice: 50, product: { name: "Product A" } },
+          { productId: 2, quantity: 2, price: 200, costPrice: 80, product: { name: "Product B" } },
+        ])
+        .mockResolvedValueOnce([])  // currentMonthMarginItems
+        .mockResolvedValueOnce([]); // previousMonthMarginItems
 
       mockOrderGroupBy.mockResolvedValue([
         { email: "user1@example.com", _count: { email: 1 } },
@@ -184,18 +193,28 @@ describe("OrderDashboardRepository", () => {
       expect(metrics.avgTicket).toBe(200);
       expect(metrics.bestSellers).toHaveLength(2);
       expect(metrics.repeatCustomers).toBe(1);
+      expect(metrics.totalMargin).toBe(390); // (100-50)*3 + (200-80)*2 = 150 + 240
     });
 
     it("returns best and worst sellers correctly", async () => {
       mockOrderAggregate
-        .mockResolvedValueOnce({ _sum: { total: 500 }, _count: 3 })
-        .mockResolvedValueOnce({ _avg: { total: 166.67 } });
+        .mockResolvedValueOnce({ _sum: { total: 500 }, _count: 3 })   // totalSold
+        .mockResolvedValueOnce({ _avg: { total: 166.67 } })           // avgTicket
+        .mockResolvedValueOnce({ _sum: { total: 0 } })                // todaySales
+        .mockResolvedValueOnce({ _sum: { total: 0 }, _count: 0 })     // currentMonth
+        .mockResolvedValueOnce({ _sum: { total: 0 }, _count: 0 })     // previousMonth
+        .mockResolvedValueOnce({ _avg: { total: 0 } })                // currentMonthAvg
+        .mockResolvedValueOnce({ _avg: { total: 0 } })                // previousMonthAvg
+        .mockResolvedValueOnce({ _sum: { total: 0 } });               // last7Days
 
-      mockOrderItemFindMany.mockResolvedValue([
-        { productId: 1, quantity: 10, price: 50, product: { name: "Best Product" } },
-        { productId: 2, quantity: 5, price: 50, product: { name: "Medium Product" } },
-        { productId: 3, quantity: 1, price: 50, product: { name: "Worst Product" } },
-      ]);
+      mockOrderItemFindMany
+        .mockResolvedValueOnce([
+          { productId: 1, quantity: 10, price: 50, costPrice: 20, product: { name: "Best Product" } },
+          { productId: 2, quantity: 5, price: 50, costPrice: 25, product: { name: "Medium Product" } },
+          { productId: 3, quantity: 1, price: 50, costPrice: 30, product: { name: "Worst Product" } },
+        ])
+        .mockResolvedValueOnce([])  // currentMonthMarginItems
+        .mockResolvedValueOnce([]); // previousMonthMarginItems
 
       mockOrderGroupBy.mockResolvedValue([]);
 
