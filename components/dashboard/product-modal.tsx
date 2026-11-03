@@ -13,7 +13,7 @@ type Props = {
     isOpen: boolean;
     mode?: ProductModalMode;
     onClose: () => void;
-    action: (formData: FormData) => Promise<ActionResult>;
+    action: (formData: FormData) => Promise<ActionResult<{ warning?: string }>>;
 }
 
 const PREDEFINED_SIZES = new Set([

@@ -86,13 +86,11 @@ export default function SearchOverlay() {
     const saveRecentSearch = useCallback((searchTerm: string) => {
         const trimmed = searchTerm.trim()
         if (!trimmed) return
-        setRecentSearches(prev => {
-            const filtered = prev.filter(s => s.toLowerCase() !== trimmed.toLowerCase())
-            const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
-            localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated))
-            return updated
-        })
-    }, [setRecentSearches])
+        const filtered = recentSearches.filter(s => s.toLowerCase() !== trimmed.toLowerCase())
+        const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated))
+        setRecentSearches(updated)
+    }, [setRecentSearches, recentSearches])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && query.trim().length >= 2) {

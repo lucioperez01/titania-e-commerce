@@ -63,7 +63,7 @@ function parseJsonArray<T>(formData: FormData, key: string): T[] | undefined {
     }
 }
 
-export async function createProductAction(formData: FormData): Promise<ActionResult> {
+export async function createProductAction(formData: FormData): Promise<ActionResult<{ warning?: string }>> {
     try {
         const name = parseString(formData.get("name")) ?? ""
         const price = parseNumber(formData.get("price")) ?? 0
@@ -111,7 +111,7 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
     }
 }
 
-export async function updateProductAction(formData: FormData): Promise<ActionResult> {
+export async function updateProductAction(formData: FormData): Promise<ActionResult<{ warning?: string }>> {
     try {
         const id = parseNumber(formData.get("id")) ?? 0
         const name = parseString(formData.get("name"))
@@ -149,7 +149,8 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
 
         const result = await updateProduct(input)
         revalidatePath("/dashboard/products")
-        return { success: true, data: { warning: result.warning } }
+        const warning = result.warning
+        return { success: true, data: warning !== undefined ? { warning } : undefined }
     } catch (err) {
         const message = err instanceof Error ? err.message : "Error al actualizar el producto."
         return { success: false, error: message }
