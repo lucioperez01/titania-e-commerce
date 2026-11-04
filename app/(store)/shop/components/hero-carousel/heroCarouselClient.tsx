@@ -47,7 +47,7 @@ export default function HeroCarouselClient({ products }: { products: ProductDTO[
             >
                 <CarouselContent >
                     {products.map((p) => (
-                        <CarouselItem key={p.id} className="xl:basis-1/2">
+                        <CarouselItem key={p.id} className="basis-full sm:basis-1/2 xl:basis-1/3">
                             <div className="p-1 flex items-center justify-center">
                                 <ProductCard p={p} />
                             </div>

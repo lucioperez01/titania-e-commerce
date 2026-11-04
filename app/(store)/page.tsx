@@ -16,7 +16,7 @@ async function HomeContent() {
     return (
         <>
             <Header />
-            <div className="w-90 xl:w-200">
+            <div className="w-full max-w-6xl mx-auto px-4">
                 <HeroCarousel products={products} />
                 <Link href="/shop" className="flex flex-col items-center py-5">
                     <Button variant="ghost" className="text-white cursor-pointer border rounded-xs font-primary xl:text-lg">

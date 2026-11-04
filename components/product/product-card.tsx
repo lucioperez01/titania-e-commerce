@@ -29,16 +29,16 @@ export default function ProductCard({ p }: ProductCardProps) {
     return (
         <div className="relative">
             <Link href={`/product/${p.slug}`}>
-                <div key={p.id} className="flex flex-col justify-between w-sm h-95 border border-gray-100/80 shadow-xl">
+                <div key={p.id} className="flex flex-col justify-between w-full max-w-sm border border-gray-100/80 shadow-xl">
 
 
-                    <img src={p.images[0].url} alt={p.name} className="object-cover object-top w-sm h-70" />
+                    <img src={p.images[0].url} alt={p.name} className="object-cover object-top w-full aspect-[3/4]" />
 
-                    <div className="w-sm flex justify-between items-center text-white p-5">
+                    <div className="flex justify-between items-center text-white p-5">
 
-                        <div className="flex flex-col justify-center">
-                            <p className="text-xl truncate w-50">{p.name}</p>
-                            <p className="text-xs text-gray-200/50 truncate w-50">{p.desc}</p>
+                        <div className="flex flex-col justify-center min-w-0 flex-1">
+                            <p className="text-xl truncate">{p.name}</p>
+                            <p className="text-xs text-gray-200/50 truncate">{p.desc}</p>
                         </div>
 
                         <div>
