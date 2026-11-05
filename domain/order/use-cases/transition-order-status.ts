@@ -128,19 +128,21 @@ export class TransitionOrderStatus {
           },
         });
         
-        // Si el stock de la variante llega a 0, desactivar el producto
-        if (updatedVariant.stock === 0) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { isOnline: false },
-          });
-        }
+        // Increment sold count and disable product if variant stock is 0
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            sold: { increment: item.quantity },
+            ...(updatedVariant.stock === 0 ? { isOnline: false } : {}),
+          },
+        });
       } else {
         const updatedProduct = await tx.product.update({
           where: { id: item.productId },
           data: {
             stock: { decrement: item.quantity },
             reservedStock: { decrement: item.quantity },
+            sold: { increment: item.quantity },
           },
         });
         

@@ -5,6 +5,10 @@ export type FindAllOptions = {
     isOnline?: boolean
     categoryId?: number
     sizes?: string[]
+    /** Sort order: 'sold' sorts by sold DESC with nulls last and createdAt ASC tiebreak; 'createdAt' sorts by createdAt DESC */
+    orderBy?: 'sold' | 'createdAt'
+    /** Maximum number of products to return */
+    take?: number
 }
 
 export interface ProductRepository {

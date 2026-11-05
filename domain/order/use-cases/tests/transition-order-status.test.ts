@@ -135,6 +135,7 @@ describe("TransitionOrderStatus", () => {
           data: {
             stock: { decrement: 2 },
             reservedStock: { decrement: 2 },
+            sold: { increment: 2 },
           },
         });
 
@@ -153,6 +154,55 @@ describe("TransitionOrderStatus", () => {
             }),
           })
         );
+      });
+
+      it("should increment product.sold by item quantity for both variant and non-variant items", async () => {
+        mockProductVariantUpdate.mockResolvedValue({ stock: 5 });
+        mockTransaction.mockImplementation(buildTxMock());
+
+        const useCase = new TransitionOrderStatus();
+        await useCase.execute({
+          orderId: 1,
+          newStatus: "PAID",
+          trigger: "webhook",
+        });
+
+        // Non-variant item (productId: 100, quantity: 2)
+        expect(mockProductUpdate).toHaveBeenCalledWith({
+          where: { id: 100 },
+          data: expect.objectContaining({
+            sold: { increment: 2 },
+          }),
+        });
+
+        // Variant item (productId: 101, quantity: 1) — sold incremented on the product
+        expect(mockProductUpdate).toHaveBeenCalledWith({
+          where: { id: 101 },
+          data: expect.objectContaining({
+            sold: { increment: 1 },
+          }),
+        });
+      });
+
+      it("should increment sold and disable product atomically in same transaction for variant items", async () => {
+        mockProductVariantUpdate.mockResolvedValue({ stock: 0 });
+        mockTransaction.mockImplementation(buildTxMock());
+
+        const useCase = new TransitionOrderStatus();
+        await useCase.execute({
+          orderId: 1,
+          newStatus: "PAID",
+          trigger: "webhook",
+        });
+
+        // Variant stock reached 0 — product should get sold increment AND isOnline: false
+        expect(mockProductUpdate).toHaveBeenCalledWith({
+          where: { id: 101 },
+          data: {
+            sold: { increment: 1 },
+            isOnline: false,
+          },
+        });
       });
 
       it("should log transition with source webhook", async () => {

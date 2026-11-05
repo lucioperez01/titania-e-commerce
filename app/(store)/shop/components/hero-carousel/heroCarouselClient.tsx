@@ -6,6 +6,7 @@ import {
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
+    CarouselDots,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
 import ProductCard from "@/components/product/product-card"
@@ -47,7 +48,7 @@ export default function HeroCarouselClient({ products }: { products: ProductDTO[
             >
                 <CarouselContent >
                     {products.map((p) => (
-                        <CarouselItem key={p.id} className="basis-full sm:basis-1/2 xl:basis-1/3">
+                        <CarouselItem key={p.id} className="basis-auto">
                             <div className="p-1 flex items-center justify-center">
                                 <ProductCard p={p} />
                             </div>
@@ -55,8 +56,9 @@ export default function HeroCarouselClient({ products }: { products: ProductDTO[
                     ))}
                 </CarouselContent>
 
-                <CarouselPrevious />
-                <CarouselNext />
+                <CarouselPrevious className="left-2 sm:-left-12 bg-black/30 hover:bg-black/50" />
+                <CarouselNext className="right-2 sm:-right-12 bg-black/30 hover:bg-black/50" />
+                <CarouselDots />
             </Carousel>
         </div>
     )

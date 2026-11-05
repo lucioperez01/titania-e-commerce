@@ -2,6 +2,7 @@ import { PrismaProductRepository } from "@/infrastructure/repositories/PrismaPro
 import { Product } from "@/domain/product/entities/product"
 import { ProductImage } from "@/domain/product/entities/image"
 import { Category } from "@/domain/product/entities/category"
+import { Prisma } from "@prisma/client"
 
 // Mock prisma client
 jest.mock("@/infrastructure/db/prismaClient", () => ({
@@ -315,6 +316,75 @@ describe("PrismaProductRepository", () => {
             const sizes = await repo.findAvailableSizes()
 
             expect(sizes).toEqual([])
+        })
+    })
+
+    describe("findAll with orderBy", () => {
+        it("passes sold DESC with nulls last and createdAt ASC tiebreak when orderBy is 'sold'", async () => {
+            mockPrisma.product.findMany.mockResolvedValue([])
+
+            await repo.findAll({ orderBy: 'sold' })
+
+            expect(mockPrisma.product.findMany).toHaveBeenCalledWith({
+                where: { isDeleted: false },
+                orderBy: [{ sold: { sort: Prisma.SortOrder.desc, nulls: Prisma.NullsOrder.last } }, { createdAt: Prisma.SortOrder.asc }],
+                take: undefined,
+                include: { category: true, images: true },
+            })
+        })
+
+        it("passes createdAt DESC when orderBy is 'createdAt'", async () => {
+            mockPrisma.product.findMany.mockResolvedValue([])
+
+            await repo.findAll({ orderBy: 'createdAt' })
+
+            expect(mockPrisma.product.findMany).toHaveBeenCalledWith({
+                where: { isDeleted: false },
+                orderBy: { createdAt: Prisma.SortOrder.desc },
+                take: undefined,
+                include: { category: true, images: true },
+            })
+        })
+
+        it("passes undefined orderBy when not specified", async () => {
+            mockPrisma.product.findMany.mockResolvedValue([])
+
+            await repo.findAll({})
+
+            expect(mockPrisma.product.findMany).toHaveBeenCalledWith({
+                where: { isDeleted: false },
+                orderBy: undefined,
+                take: undefined,
+                include: { category: true, images: true },
+            })
+        })
+    })
+
+    describe("findAll with take", () => {
+        it("passes take limit to Prisma", async () => {
+            mockPrisma.product.findMany.mockResolvedValue([])
+
+            await repo.findAll({ take: 6 })
+
+            expect(mockPrisma.product.findMany).toHaveBeenCalledWith({
+                where: { isDeleted: false },
+                orderBy: undefined,
+                take: 6,
+                include: { category: true, images: true },
+            })
+        })
+
+        it("combines orderBy and take correctly", async () => {
+            mockPrisma.product.findMany.mockResolvedValue([])
+
+            await repo.findAll({ orderBy: 'sold', take: 6, isOnline: true })
+
+            expect(mockPrisma.product.findMany).toHaveBeenCalledWith({
+                where: { isDeleted: false, isOnline: true },
+                orderBy: [{ sold: { sort: Prisma.SortOrder.desc, nulls: Prisma.NullsOrder.last } }, { createdAt: Prisma.SortOrder.asc }],
+                take: 6,
+                include: { category: true, images: true },
+            })
         })
     })
 })

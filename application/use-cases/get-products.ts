@@ -6,6 +6,8 @@ export type GetProductsOptions = {
     onlyOnline?: boolean
     categorySlug?: string
     sizes?: string[]
+    orderBy?: 'sold' | 'createdAt'
+    take?: number
 }
 
 export async function getProducts(options?: GetProductsOptions): Promise<ProductDTO[]> {
@@ -21,9 +23,10 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         categoryId = category.id
     }
     
+    const repoOptions = { categoryId, sizes: options?.sizes, orderBy: options?.orderBy, take: options?.take }
     const products = options?.onlyOnline
-        ? await repo.findAll({ isOnline: true, categoryId, sizes: options?.sizes })
-        : await repo.findAll({ categoryId, sizes: options?.sizes })
+        ? await repo.findAll({ isOnline: true, ...repoOptions })
+        : await repo.findAll(repoOptions)
     return products.map(productToDTO)
 }
 

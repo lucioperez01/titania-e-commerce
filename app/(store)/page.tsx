@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 async function HomeContent() {
-    const products = await getProducts({ onlyOnline: true })
+    const products = await getProducts({ onlyOnline: true, orderBy: 'sold', take: 6 })
     return (
         <>
             <Header />

@@ -2,6 +2,7 @@ import { prisma } from "../db/prismaClient"
 import { ProductRepository, FindAllOptions } from "@/domain/product/repositories/product/product-repository"
 import { Product } from "@/domain/product/entities/product"
 import { Category } from "@/domain/product/entities/category"
+import { Prisma } from "@prisma/client"
 
 export class PrismaProductRepository implements ProductRepository {
 
@@ -16,8 +17,19 @@ export class PrismaProductRepository implements ProductRepository {
         if (options?.sizes && options.sizes.length > 0) {
             where.size = { in: options.sizes }
         }
+
+        const orderBy = options?.orderBy === 'sold'
+            ? [{ sold: { sort: Prisma.SortOrder.desc, nulls: Prisma.NullsOrder.last } }, { createdAt: Prisma.SortOrder.asc }]
+            : options?.orderBy === 'createdAt'
+            ? { createdAt: Prisma.SortOrder.desc }
+            : undefined
+
+        const take = options?.take
+
         const products = await prisma.product.findMany({
             where,
+            orderBy,
+            take,
             include: { category: true, images: true }
         })
         return products.map(p => this.mapToProduct(p))
