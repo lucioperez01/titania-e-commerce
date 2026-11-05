@@ -10,6 +10,7 @@ import WishlistDrawer from "@/components/wishlist/wishlist-drawer";
 import { SearchProvider } from "@/components/search/search-context";
 import SearchOverlay from "@/components/search/search-overlay";
 import { ToastProvider } from "@/components/ui/toast";
+import { Clarity } from "next/clarity";
 import "./globals.css";
 
 const primary = Manrope({
@@ -51,6 +52,9 @@ export default function RootLayout({
     <html lang="es">
       <body
         className={`${primary.variable} bg-linear-to-tr from-purple-500/90 to-purple-900/90 antialiased min-h-screen flex flex-col items-center justify-between ${secondary.variable} ${tertiary.variable} overflow-x-hidden`}>
+          {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
+            <Clarity projectId={process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID} />
+          )}
           <NextAuthSessionProvider>
             <ToastProvider>
               <CartProvider>
